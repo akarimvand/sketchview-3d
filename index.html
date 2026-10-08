@@ -1,0 +1,3478 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SketchView 3D — نمایشگر حرفه‌ای سه‌بعدی</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0e14;
+    --panel:#0f1419;
+    --panel-2:#1a2028;
+    --panel-3:#232a33;
+    --panel-4:#2c3540;
+    --border:#2a323d;
+    --border-2:#374151;
+    --text:#e6edf3;
+    --text-dim:#8b949e;
+    --text-mute:#6b7280;
+    --accent:#1fb6ff;
+    --accent-2:#0091ea;
+    --accent-3:#38bdf8;
+    --accent-glow:rgba(31,182,255,.35);
+    --success:#3fb950;
+    --danger:#f85149;
+    --warning:#ffa657;
+    --purple:#a855f7;
+    --pink:#ec4899;
+    --radius:10px;
+    --radius-sm:6px;
+    --shadow:0 4px 20px rgba(0,0,0,.4);
+    --shadow-lg:0 12px 40px rgba(0,0,0,.55);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; overflow:hidden; }
+  body {
+    font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    user-select:none;
+    font-feature-settings: "ss01";
+  }
+  button, input, select, textarea { font-family: inherit; }
+
+  #app { display:flex; flex-direction:column; height:100vh; }
+
+  /* ==================== Header ==================== */
+  #header {
+    height:56px;
+    background: linear-gradient(180deg, var(--panel), #0c1016);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center;
+    padding:0 18px; gap:18px;
+    z-index:100;
+    box-shadow: 0 2px 10px rgba(0,0,0,.3);
+  }
+  #logo { display:flex; align-items:center; gap:11px; font-weight:800; font-size:16px; letter-spacing:.3px; }
+  #logo .logo-icon {
+    width:32px; height:32px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:17px;
+    box-shadow: 0 0 18px var(--accent-glow), inset 0 0 12px rgba(255,255,255,.15);
+    color:#fff;
+  }
+  #logo .logo-text { display:flex; flex-direction:column; line-height:1.1; }
+  #logo .logo-text small { font-size:9px; color:var(--text-mute); font-weight:500; letter-spacing:1px; }
+
+  #header nav { display:flex; gap:3px; margin-right:24px; }
+  #header nav a {
+    color:var(--text-dim); text-decoration:none;
+    font-size:13px; font-weight:500;
+    padding:8px 14px; border-radius:8px;
+    transition:all .15s; cursor:pointer;
+    position:relative;
+  }
+  #header nav a:hover { color:var(--text); background:var(--panel-2); }
+  #header nav a.active {
+    color:var(--accent);
+    background: rgba(31,182,255,.1);
+  }
+  #header nav a.active::after {
+    content:''; position:absolute;
+    bottom:-1px; left:14px; right:14px;
+    height:2px; background:var(--accent); border-radius:2px;
+  }
+
+  #header .spacer { flex:1; }
+
+  #header .header-btn {
+    background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    color:#fff; border:none;
+    padding:9px 18px;
+    border-radius:8px;
+    font-size:13px; font-weight:700;
+    cursor:pointer;
+    transition:all .18s;
+    box-shadow: 0 2px 12px var(--accent-glow);
+    display:flex; align-items:center; gap:6px;
+  }
+  #header .header-btn:hover {
+    transform:translateY(-1px);
+    box-shadow: 0 4px 18px var(--accent-glow);
+  }
+  #header .header-btn:active { transform:translateY(0); }
+  #header .header-btn.ghost {
+    background:transparent;
+    border:1px solid var(--border-2);
+    color:var(--text);
+    box-shadow:none;
+  }
+  #header .header-btn.ghost:hover {
+    background:var(--panel-2);
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+
+  #main { flex:1; display:flex; overflow:hidden; position:relative; }
+
+  /* ==================== Sidebar Left ==================== */
+  #sidebar-left {
+    width:270px;
+    background: var(--panel);
+    border-left:1px solid var(--border);
+    display:flex; flex-direction:column;
+    overflow:hidden;
+    transition:margin .3s ease;
+  }
+  #sidebar-left.collapsed { margin-left:-270px; }
+
+  .sidebar-header {
+    padding:16px 16px 12px;
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .sidebar-title {
+    font-size:12px; font-weight:700;
+    letter-spacing:.5px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .sidebar-title .icon {
+    width:22px; height:22px;
+    background:linear-gradient(135deg, var(--accent), var(--purple));
+    border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px;
+  }
+  .sidebar-count {
+    background: var(--panel-3);
+    color: var(--text-dim);
+    font-size:10px; font-weight:700;
+    padding:3px 8px; border-radius:10px;
+    font-family:'Consolas',monospace;
+  }
+
+  #gallery-list {
+    flex:1; overflow-y:auto;
+    padding: 10px;
+  }
+
+  .gallery-item {
+    background: var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:11px;
+    margin-bottom:8px;
+    cursor:pointer;
+    transition:all .18s;
+    display:flex; gap:11px; align-items:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .gallery-item::before {
+    content:''; position:absolute;
+    inset:0;
+    background: linear-gradient(90deg, transparent, rgba(31,182,255,.08));
+    opacity:0; transition:opacity .2s;
+  }
+  .gallery-item:hover::before { opacity:1; }
+  .gallery-item:hover {
+    border-color: var(--accent);
+    transform: translateX(-3px);
+  }
+  .gallery-item.active {
+    border-color: var(--accent);
+    background: linear-gradient(90deg, rgba(31,182,255,.08), var(--panel-2));
+    box-shadow: 0 0 0 1px var(--accent-2);
+  }
+  .gallery-item .thumb {
+    width:46px; height:46px;
+    background: linear-gradient(135deg, #1a2028, #232a33);
+    border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; flex-shrink:0;
+    border:1px solid var(--border);
+  }
+  .gallery-item .info { flex:1; min-width:0; position:relative; z-index:1; }
+  .gallery-item .name {
+    font-size:12px; font-weight:700;
+    color:var(--text);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .gallery-item .meta {
+    font-size:10px; color:var(--text-dim);
+    margin-top:3px;
+    display:flex; gap:8px;
+  }
+  .gallery-item .meta span { display:flex; align-items:center; gap:3px; }
+
+  .sidebar-footer { padding:12px; border-top:1px solid var(--border); }
+
+  /* ==================== Viewport ==================== */
+  #viewport { flex:1; position:relative; background:#0a0e14; overflow:hidden; }
+
+  #empty-state {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    color:var(--text-dim); text-align:center;
+    padding:24px;
+    z-index:2;
+  }
+  #empty-state h1 {
+    color:var(--text); font-size:30px;
+    margin-bottom:14px; font-weight:800;
+    background: linear-gradient(135deg, #fff 30%, var(--accent) 70%, var(--purple));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    letter-spacing:-.5px;
+  }
+  #empty-state p {
+    font-size:14px; line-height:1.85;
+    max-width:560px; margin-bottom:28px;
+    color:var(--text-dim);
+  }
+  #empty-state .drop-area {
+    border:2px dashed var(--border-2);
+    border-radius:16px;
+    padding:36px 60px;
+    cursor:pointer;
+    transition:all .25s;
+    margin-bottom:28px;
+    background: rgba(26,32,40,.4);
+    position:relative;
+    overflow:hidden;
+  }
+  #empty-state .drop-area::before {
+    content:''; position:absolute; inset:-2px;
+    background: linear-gradient(135deg, var(--accent), var(--purple), var(--pink));
+    border-radius:16px;
+    opacity:0; transition:opacity .3s;
+    z-index:-1;
+    filter: blur(12px);
+  }
+  #empty-state .drop-area:hover,
+  #empty-state .drop-area.drag {
+    border-color: var(--accent);
+    background: rgba(31,182,255,.08);
+    transform: translateY(-2px);
+  }
+  #empty-state .drop-area:hover::before,
+  #empty-state .drop-area.drag::before { opacity:.35; }
+  #empty-state .drop-area svg {
+    width:52px; height:52px;
+    margin-bottom:14px;
+    opacity:.7;
+    color:var(--accent);
+  }
+  #empty-state .drop-area .drop-title {
+    font-size:15px; font-weight:700; color:var(--text);
+    margin-bottom:6px;
+  }
+  #empty-state .drop-area .drop-sub {
+    font-size:11px; color:var(--text-mute);
+  }
+
+  #empty-state .features {
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:10px;
+    max-width:760px;
+  }
+  #empty-state .feature {
+    background: var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:14px 10px;
+    font-size:11px; color:var(--text);
+    display:flex; flex-direction:column;
+    align-items:center; gap:6px;
+    transition:all .18s;
+  }
+  #empty-state .feature:hover {
+    border-color: var(--accent);
+    background: var(--panel-3);
+    transform:translateY(-2px);
+  }
+  #empty-state .feature .icon { font-size:20px; }
+  #empty-state .feature .label { font-weight:600; }
+
+  /* ==================== Toolbar ==================== */
+  #viewport-toolbar {
+    position:absolute; top:14px; right:14px;
+    display:flex; gap:5px;
+    background: rgba(15,20,25,.92);
+    backdrop-filter: blur(16px);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:6px;
+    z-index:20;
+    box-shadow: var(--shadow);
+  }
+  .vbtn {
+    background:transparent; border:none;
+    color:var(--text);
+    padding:9px 11px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:15px;
+    transition:all .15s;
+    display:flex; align-items:center; justify-content:center;
+    min-width:36px;
+    position:relative;
+  }
+  .vbtn:hover { background: var(--panel-3); }
+  .vbtn:active { transform: scale(.95); }
+  .vbtn.active {
+    background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    color:#fff;
+    box-shadow: 0 2px 10px var(--accent-glow);
+  }
+  .vbtn .label { font-size:11px; font-weight:600; margin-right:5px; display:none; }
+  .vbtn.wide { padding:9px 14px; }
+  .vbtn.wide .label { display:inline; }
+  .vbtn::after {
+    content: attr(data-tooltip);
+    position:absolute;
+    top: calc(100% + 8px);
+    right:50%; transform:translateX(50%) translateY(-4px);
+    background: rgba(15,20,25,.98);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:5px 10px;
+    border-radius:6px;
+    font-size:10px; font-weight:600;
+    white-space:nowrap;
+    opacity:0; pointer-events:none;
+    transition: all .18s;
+    z-index:100;
+  }
+  .vbtn:hover::after { opacity:1; transform:translateX(50%) translateY(0); }
+
+  /* ==================== Stats Card ==================== */
+  #stats-card {
+    position:absolute; top:14px; left:14px;
+    background: rgba(15,20,25,.94);
+    backdrop-filter: blur(16px);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px 16px;
+    z-index:15;
+    min-width:230px;
+    display:none;
+    box-shadow: var(--shadow);
+  }
+  #stats-card.visible { display:block; }
+  #stats-card h4 {
+    font-size:11px; font-weight:700;
+    letter-spacing:1px;
+    color:var(--text-dim);
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:6px;
+  }
+  #stats-card h4::before {
+    content:''; width:3px; height:12px;
+    background: linear-gradient(180deg, var(--accent), var(--purple));
+    border-radius:2px;
+  }
+  #stats-card .stat {
+    display:flex; justify-content:space-between;
+    font-size:11px; padding:4px 0;
+    gap:12px;
+  }
+  #stats-card .stat .k { color:var(--text-dim); }
+  #stats-card .stat .v {
+    color:var(--accent);
+    font-family:'Consolas',monospace;
+    font-weight:700;
+    direction:ltr;
+  }
+
+  /* ==================== Info Overlay ==================== */
+  #info-overlay {
+    position:absolute; bottom:14px; left:14px;
+    background: rgba(15,20,25,.88);
+    backdrop-filter: blur(14px);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:8px 14px;
+    font-family:'Consolas',monospace;
+    font-size:11px;
+    color:var(--text-dim);
+    z-index:15;
+    display:flex; gap:16px;
+  }
+  #info-overlay span { display:flex; align-items:center; gap:5px; }
+  #info-overlay span::before {
+    content:''; width:6px; height:6px; border-radius:50%;
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success);
+  }
+  #info-overlay span.value { color:var(--success); font-weight:700; }
+  #info-overlay span:first-child::before { background:var(--accent); box-shadow:0 0 6px var(--accent); }
+  #info-overlay span:last-child::before { background:var(--warning); box-shadow:0 0 6px var(--warning); }
+
+  /* ==================== Sidebar Right ==================== */
+  #sidebar-right {
+    width:330px;
+    background: var(--panel);
+    border-right:1px solid var(--border);
+    display:flex; flex-direction:column;
+    overflow:hidden;
+    transition:margin .3s ease;
+  }
+  #sidebar-right.collapsed { margin-right:-330px; }
+
+  #tabs {
+    display:flex;
+    border-bottom:1px solid var(--border);
+    background: var(--panel-2);
+    overflow-x:auto;
+    flex-shrink:0;
+  }
+  .tab {
+    flex:1;
+    min-width:56px;
+    padding:13px 6px;
+    text-align:center;
+    font-size:10px; font-weight:600;
+    color:var(--text-dim);
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    transition:all .18s;
+    white-space:nowrap;
+    display:flex; flex-direction:column;
+    gap:4px; align-items:center;
+    position:relative;
+  }
+  .tab .tab-icon { font-size:16px; transition:transform .18s; }
+  .tab:hover { color:var(--text); background:var(--panel-3); }
+  .tab:hover .tab-icon { transform: scale(1.15); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: var(--panel);
+  }
+  .tab.active .tab-icon { transform: scale(1.1); }
+
+  #tab-panels { flex:1; overflow-y:auto; }
+  .tab-panel { display:none; padding:16px; }
+  .tab-panel.active { display:block; animation: fadeIn .25s ease; }
+
+  @keyframes fadeIn {
+    from { opacity:0; transform:translateY(6px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  /* ==================== Sections ==================== */
+  .section { margin-bottom:22px; }
+  .section:last-child { margin-bottom:0; }
+  .section-title {
+    font-size:11px; font-weight:700;
+    letter-spacing:.8px;
+    color:var(--text-dim);
+    margin-bottom:12px;
+    display:flex; align-items:center; gap:8px;
+    text-transform:uppercase;
+  }
+  .section-title::before {
+    content:''; width:3px; height:14px;
+    background: linear-gradient(180deg, var(--accent), var(--purple));
+    border-radius:2px;
+  }
+
+  /* ==================== Controls ==================== */
+  .ctrl {
+    display:flex; align-items:center;
+    justify-content:space-between;
+    padding:7px 0; font-size:12px;
+    gap:10px;
+  }
+  .ctrl label { color:var(--text-dim); flex-shrink:0; font-weight:500; }
+  .ctrl input[type="range"] {
+    flex:1;
+    accent-color: var(--accent);
+    height:4px;
+    background: transparent;
+  }
+  .ctrl input[type="color"] {
+    width:42px; height:28px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    background:transparent;
+    cursor:pointer; padding:0;
+  }
+  .ctrl select, .ctrl input[type="text"], .ctrl input[type="number"] {
+    flex:1;
+    padding:8px 10px;
+    background: var(--panel-2);
+    color: var(--text);
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-family:inherit;
+    font-size:12px;
+    cursor:pointer;
+    transition: border-color .15s;
+  }
+  .ctrl select:focus, .ctrl input:focus {
+    outline:none;
+    border-color: var(--accent);
+  }
+  .ctrl .val-badge {
+    min-width:44px; text-align:center;
+    font-family:'Consolas',monospace;
+    font-size:11px; font-weight:700;
+    color:var(--accent);
+    background: rgba(31,182,255,.12);
+    padding:4px 8px; border-radius:6px;
+    direction:ltr;
+  }
+
+  /* ==================== Switch ==================== */
+  .switch { position:relative; width:40px; height:22px; flex-shrink:0; }
+  .switch input { opacity:0; width:0; height:0; }
+  .switch .slider {
+    position:absolute; inset:0;
+    background: #3a424d;
+    border-radius:22px;
+    cursor:pointer;
+    transition:.22s;
+  }
+  .switch .slider::before {
+    content:'';
+    position:absolute;
+    height:16px; width:16px;
+    left:3px; top:3px;
+    background:#fff;
+    border-radius:50%;
+    transition:.22s;
+    box-shadow: 0 2px 4px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .slider {
+    background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    box-shadow: 0 0 10px var(--accent-glow);
+  }
+  .switch input:checked + .slider::before { transform: translateX(18px); }
+
+  /* ==================== Environment Grid ==================== */
+  .env-grid {
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:7px;
+  }
+  .env-item {
+    aspect-ratio:1;
+    border-radius:10px;
+    border:2px solid var(--border);
+    cursor:pointer;
+    transition:all .18s;
+    background-size:cover;
+    background-position:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .env-item:hover {
+    transform: scale(1.04);
+    border-color: var(--accent);
+    z-index:1;
+  }
+  .env-item.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-2), 0 4px 12px var(--accent-glow);
+  }
+  .env-item.active::after {
+    content:'✓';
+    position:absolute; top:4px; right:4px;
+    width:18px; height:18px;
+    background: var(--accent);
+    color:#fff;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:700;
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .env-item .env-label {
+    position:absolute; bottom:0; left:0; right:0;
+    background: linear-gradient(transparent, rgba(0,0,0,.85));
+    color:#fff; font-size:9px;
+    padding:6px 3px 3px;
+    text-align:center;
+    font-weight:600;
+  }
+  .env-studio { background: linear-gradient(135deg, #2c3e50, #4a6274); }
+  .env-sunset { background: linear-gradient(135deg, #ff6e7f, #bfe9ff); }
+  .env-forest { background: linear-gradient(135deg, #134e5e, #71b280); }
+  .env-night { background: linear-gradient(135deg, #0f0c29, #302b63); }
+  .env-warehouse { background: linear-gradient(135deg, #485563, #29323c); }
+  .env-city { background: linear-gradient(135deg, #2b5876, #4e4376); }
+
+  /* ==================== Buttons ==================== */
+  .btn {
+    display:inline-flex; align-items:center; justify-content:center;
+    gap:6px;
+    padding:9px 14px;
+    background: var(--panel-2);
+    border:1px solid var(--border);
+    color: var(--text);
+    border-radius:8px;
+    font-family:inherit;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .15s;
+    width:100%;
+  }
+  .btn:hover {
+    background: var(--panel-3);
+    border-color: var(--border-2);
+    transform: translateY(-1px);
+  }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    border-color: transparent;
+    color:#fff;
+    box-shadow: 0 2px 10px var(--accent-glow);
+  }
+  .btn.primary:hover {
+    box-shadow: 0 4px 16px var(--accent-glow);
+  }
+  .btn.success {
+    background: rgba(63,185,80,.15);
+    border-color: rgba(63,185,80,.5);
+    color:var(--success);
+  }
+  .btn.success:hover { background: rgba(63,185,80,.25); }
+  .btn.danger {
+    background: rgba(248,81,73,.1);
+    border-color: rgba(248,81,73,.4);
+    color: var(--danger);
+  }
+  .btn.danger:hover { background: rgba(248,81,73,.2); }
+  .btn.purple {
+    background: rgba(168,85,247,.15);
+    border-color: rgba(168,85,247,.5);
+    color: var(--purple);
+  }
+  .btn.purple:hover { background: rgba(168,85,247,.25); }
+  .btn.tiny { padding:6px 10px; font-size:11px; width:auto; }
+  .btn-row { display:flex; gap:6px; }
+  .btn-row .btn { flex:1; }
+
+  /* ==================== Texture Drop ==================== */
+  .texture-drop {
+    display:flex; align-items:center;
+    gap:12px;
+    background: var(--panel-2);
+    border:2px dashed var(--border-2);
+    border-radius:10px;
+    padding:12px;
+    cursor:pointer;
+    transition:all .2s;
+  }
+  .texture-drop:hover {
+    border-color: var(--accent);
+    background: var(--panel-3);
+  }
+  .texture-drop.drag {
+    border-color: var(--accent);
+    background: rgba(31,182,255,.08);
+    transform: scale(1.01);
+  }
+  .tex-preview {
+    width:56px; height:56px;
+    border-radius:8px;
+    background:
+      linear-gradient(45deg,#222 25%,transparent 25%,transparent 75%,#222 75%),
+      linear-gradient(45deg,#222 25%,#333 25%,#333 75%,#222 75%);
+    background-size:12px 12px;
+    background-position: 0 0, 6px 6px;
+    background-color:#2a2a2a;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden; flex-shrink:0;
+    border:1px solid var(--border);
+  }
+  .tex-preview img { width:100%; height:100%; object-fit:cover; }
+  .tex-placeholder { font-size:22px; opacity:.5; }
+  .tex-info { min-width:0; flex:1; }
+  .tex-name {
+    font-size:12px; font-weight:700;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .tex-hint { font-size:10px; color:var(--text-mute); margin-top:4px; }
+
+  /* ==================== Existing Textures ==================== */
+  .existing-tex-empty {
+    font-size:11px;
+    color: var(--text-mute);
+    text-align:center;
+    padding:18px 12px;
+    font-style:italic;
+    background: var(--panel-2);
+    border:1px dashed var(--border);
+    border-radius:10px;
+    line-height:1.7;
+  }
+
+  .tex-card {
+    background: var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:11px;
+    margin-bottom:9px;
+    transition:all .18s;
+    overflow:hidden;
+  }
+  .tex-card:hover { border-color: var(--accent); }
+  .tex-card.disabled { opacity:.55; }
+  .tex-card.open {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, var(--panel-2), var(--panel-3));
+  }
+
+  .tex-card-head {
+    display:flex; align-items:center;
+    gap:10px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .tex-card-thumb {
+    width:46px; height:46px;
+    border-radius:8px;
+    overflow:hidden; flex-shrink:0;
+    background:#222;
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .tex-card-thumb img { width:100%; height:100%; object-fit:cover; }
+  .tex-card-thumb span { font-size:18px; opacity:.6; }
+  .tex-card-info { flex:1; min-width:0; }
+  .tex-card-title {
+    font-size:11px; font-weight:800;
+    color:var(--text);
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .tex-card-title .slot-dot {
+    width:6px; height:6px; border-radius:50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+  }
+  .tex-card-sub {
+    font-size:10px;
+    color:var(--text-dim);
+    margin-top:3px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .tex-card-arrow {
+    font-size:11px; color:var(--text-dim);
+    transition: transform .22s;
+  }
+  .tex-card.open .tex-card-arrow { transform: rotate(180deg); }
+
+  .tex-card-body {
+    display:none;
+    margin-top:11px;
+    padding-top:11px;
+    border-top:1px solid var(--border);
+  }
+  .tex-card.open .tex-card-body { display:block; animation: fadeIn .2s; }
+
+  .tex-slot-badge {
+    display:inline-block;
+    font-size:9px;
+    background: rgba(31,182,255,.15);
+    color:var(--accent);
+    padding:3px 8px;
+    border-radius:5px;
+    font-family:'Consolas',monospace;
+    margin-bottom:8px;
+    font-weight:700;
+  }
+
+  .tex-actions {
+    display:flex; gap:5px;
+    margin-top:10px;
+  }
+  .tex-actions .btn { flex:1; }
+
+  .tex-meta-row {
+    display:flex; justify-content:space-between;
+    font-size:10px; color:var(--text-mute);
+    padding:4px 0;
+    font-family:'Consolas',monospace;
+    direction:ltr;
+  }
+  .tex-meta-row span:first-child { color:var(--text-dim); direction:rtl; font-family:'Vazirmatn',sans-serif; }
+
+  /* ==================== Annotation ==================== */
+  .annotation-item {
+    background: var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+    margin-bottom:7px;
+    font-size:11px;
+    display:flex; justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+    transition:all .15s;
+    gap:10px;
+  }
+  .annotation-item:hover {
+    border-color: var(--accent);
+    background: var(--panel-3);
+    transform: translateX(-2px);
+  }
+  .annotation-item .num {
+    background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    color:#fff; width:22px; height:22px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:700;
+    flex-shrink:0;
+    box-shadow: 0 2px 6px var(--accent-glow);
+  }
+  .annotation-item .text {
+    flex:1;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .annotation-item .del {
+    background:transparent; border:none;
+    color:var(--danger); cursor:pointer;
+    font-size:14px;
+    padding:3px 7px;
+    border-radius:5px;
+    transition:background .15s;
+  }
+  .annotation-item .del:hover { background: rgba(248,81,73,.15); }
+
+  .empty-list {
+    text-align:center;
+    color: var(--text-mute);
+    font-size:11px;
+    padding:22px 10px;
+    font-style:italic;
+    background: var(--panel-2);
+    border:1px dashed var(--border);
+    border-radius:10px;
+  }
+
+  /* ==================== Loading ==================== */
+  #loading {
+    position:absolute; inset:0;
+    display:none;
+    align-items:center; justify-content:center;
+    flex-direction:column; gap:20px;
+    background: rgba(10,14,20,.85);
+    backdrop-filter: blur(8px);
+    z-index:100;
+  }
+  #loading.active { display:flex; }
+  .spinner {
+    width:56px; height:56px;
+    border:3px solid var(--border);
+    border-top-color: var(--accent);
+    border-right-color: var(--purple);
+    border-radius:50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading .msg { font-size:13px; color:var(--text-dim); font-weight:600; }
+
+  /* ==================== Annotations Pins ==================== */
+  .annot-pin {
+    position:absolute;
+    width:32px; height:32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border:3px solid #fff;
+    border-radius:50%;
+    cursor:pointer;
+    transform:translate(-50%,-50%);
+    z-index:10;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:12px;
+    color:#fff;
+    box-shadow: 0 4px 14px rgba(0,0,0,.5), 0 0 0 5px rgba(31,182,255,.25);
+    transition: transform .18s;
+    user-select:none;
+  }
+  .annot-pin:hover {
+    transform: translate(-50%,-50%) scale(1.18);
+    z-index:11;
+  }
+  .annot-tooltip {
+    position:absolute;
+    bottom: calc(100% + 12px);
+    left:50%;
+    transform: translateX(-50%);
+    background: rgba(15,20,25,.98);
+    backdrop-filter: blur(14px);
+    color:#fff;
+    padding:9px 13px;
+    border-radius:9px;
+    font-size:12px;
+    white-space:nowrap;
+    border:1px solid var(--border-2);
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .15s;
+    box-shadow: var(--shadow);
+    font-weight:600;
+  }
+  .annot-pin:hover .annot-tooltip { opacity:1; }
+  .annot-tooltip::after {
+    content:'';
+    position:absolute; top:100%;
+    left:50%; transform:translateX(-50%);
+    border:7px solid transparent;
+    border-top-color: rgba(15,20,25,.98);
+  }
+
+  /* ==================== Color Swatches ==================== */
+  .swatch-row { display:flex; gap:7px; flex-wrap:wrap; }
+  .swatch {
+    width:34px; height:34px;
+    border-radius:8px;
+    cursor:pointer;
+    border:2px solid transparent;
+    transition: all .15s;
+    position:relative;
+  }
+  .swatch:hover { transform: scale(1.1); }
+  .swatch.active {
+    border-color:#fff;
+    box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--accent-glow);
+  }
+
+  /* ==================== Scrollbar ==================== */
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--border), var(--border-2));
+    border-radius:4px;
+    border:2px solid var(--panel);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent-2); }
+
+  /* ==================== Responsive ==================== */
+  @media (max-width:1000px) {
+    #sidebar-left, #sidebar-right {
+      position:absolute;
+      height:100%;
+      z-index:30;
+    }
+    #sidebar-right { right:0; }
+  }
+
+  /* ==================== Toast ==================== */
+  #toast {
+    position:fixed;
+    bottom:28px; left:50%;
+    transform: translateX(-50%) translateY(90px);
+    background: var(--panel-2);
+    border:1px solid var(--border);
+    color: var(--text);
+    padding:12px 20px;
+    border-radius:10px;
+    font-size:13px; font-weight:600;
+    box-shadow: var(--shadow-lg);
+    transition: transform .32s cubic-bezier(.2,.9,.3,1.2);
+    z-index:1000;
+    pointer-events:none;
+    display:flex; align-items:center; gap:8px;
+    max-width: 90vw;
+  }
+  #toast::before {
+    content:'ℹ';
+    font-size:14px;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.success { border-color: var(--success); background: linear-gradient(135deg, var(--panel-2), rgba(63,185,80,.1)); }
+  #toast.success::before { content:'✓'; color: var(--success); }
+  #toast.error { border-color: var(--danger); background: linear-gradient(135deg, var(--panel-2), rgba(248,81,73,.1)); }
+  #toast.error::before { content:'✕'; color: var(--danger); }
+  #toast.warning { border-color: var(--warning); }
+  #toast.warning::before { content:'⚠'; color: var(--warning); }
+
+  /* ==================== Modal ==================== */
+  #modal-backdrop {
+    position:fixed; inset:0;
+    background: rgba(0,0,0,.75);
+    backdrop-filter: blur(4px);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:999;
+    padding:20px;
+  }
+  #modal-backdrop.active { display:flex; }
+  #modal {
+    background: var(--panel);
+    border:1px solid var(--border-2);
+    border-radius:14px;
+    padding:22px;
+    max-width:520px;
+    width:100%;
+    box-shadow: var(--shadow-lg);
+    animation: modalIn .25s ease;
+  }
+  @keyframes modalIn {
+    from { opacity:0; transform: scale(.94) translateY(12px); }
+    to { opacity:1; transform: scale(1) translateY(0); }
+  }
+  #modal h3 {
+    font-size:16px; font-weight:800;
+    margin-bottom:16px;
+    display:flex; align-items:center; gap:10px;
+  }
+  #modal h3 .icon {
+    width:32px; height:32px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px;
+  }
+  #modal-body { font-size:13px; line-height:1.85; color:var(--text-dim); margin-bottom:20px; }
+  #modal-body .highlight { color: var(--accent); font-weight:600; }
+  #modal .btn-row { justify-content:flex-end; }
+  #modal .btn-row .btn { width:auto; min-width:90px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ==================== Header ==================== -->
+  <header id="header">
+    <div id="logo">
+      <div class="logo-icon">◈</div>
+      <div class="logo-text">
+        <span>SketchView 3D</span>
+        <small>نمایشگر حرفه‌ای</small>
+      </div>
+    </div>
+    <nav>
+      <a class="active">مدل‌ها</a>
+      <a>گالری</a>
+      <a>درباره</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="header-btn ghost" id="btn-share">🔗 اشتراک‌گذاری</button>
+    <button class="header-btn" id="btn-upload-header">📤 بارگذاری مدل</button>
+  </header>
+
+  <!-- ==================== Main ==================== -->
+  <div id="main">
+
+    <!-- Sidebar Left: Gallery -->
+    <aside id="sidebar-left">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <span class="icon">📁</span>
+          <span>مدل‌های من</span>
+        </div>
+        <span class="sidebar-count" id="gallery-count">0</span>
+      </div>
+      <div id="gallery-list">
+        <div class="empty-list">هنوز مدلی بارگذاری نکرده‌اید</div>
+      </div>
+      <div class="sidebar-footer">
+        <button class="btn primary" id="btn-upload-side">➕ بارگذاری مدل جدید</button>
+      </div>
+    </aside>
+
+    <!-- Viewport -->
+    <div id="viewport">
+      <div id="empty-state">
+        <h1>نمایشگر حرفه‌ای سه‌بعدی</h1>
+        <p>مدل خود را بارگذاری کنید یا روی این ناحیه رها کنید. پشتیبانی کامل از STL، OBJ، GLTF/GLB، PLY و FBX همراه با ویرایشگر تکسچر، استخراج بافت‌ها، محیط HDRI، حاشیه‌نویسی، و خروجی حرفه‌ای.</p>
+
+        <div class="drop-area" id="drop-area">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <div class="drop-title">📂 فایل را اینجا رها کنید</div>
+          <div class="drop-sub">یا کلیک کنید — می‌توانید چند فایل (OBJ+MTL+تکسچر) را همزمان انتخاب کنید</div>
+        </div>
+
+        <div class="features">
+          <div class="feature"><span class="icon">📦</span><span class="label">۵ فرمت</span></div>
+          <div class="feature"><span class="icon">🎨</span><span class="label">۷ نوع متریال</span></div>
+          <div class="feature"><span class="icon">🖼️</span><span class="label">ویرایش تکسچر</span></div>
+          <div class="feature"><span class="icon">📥</span><span class="label">استخراج بافت</span></div>
+          <div class="feature"><span class="icon">🌅</span><span class="label">محیط HDRI</span></div>
+          <div class="feature"><span class="icon">📍</span><span class="label">حاشیه‌نویسی</span></div>
+          <div class="feature"><span class="icon">📷</span><span class="label">اسکرین‌شات 4K</span></div>
+          <div class="feature"><span class="icon">📤</span><span class="label">خروجی GLB</span></div>
+        </div>
+      </div>
+
+      <!-- Viewport Toolbar -->
+      <div id="viewport-toolbar">
+        <button class="vbtn" id="vb-fit" data-tooltip="Fit to View (F)">🎯</button>
+        <button class="vbtn" id="vb-reset" data-tooltip="ریست دوربین (R)">🔄</button>
+        <button class="vbtn" id="vb-autorotate" data-tooltip="چرخش خودکار">▶</button>
+        <button class="vbtn" id="vb-fullscreen" data-tooltip="تمام‌صفحه">⛶</button>
+        <button class="vbtn" id="vb-screenshot" data-tooltip="اسکرین‌شات">📷</button>
+        <button class="vbtn wide" id="vb-annotate" data-tooltip="افزودن حاشیه‌نویسی">
+          <span>📍</span><span class="label">حاشیه‌نویسی</span>
+        </button>
+        <button class="vbtn" id="vb-sidebar-right" data-tooltip="پنل تنظیمات">⚙️</button>
+      </div>
+
+      <!-- Stats Card -->
+      <div id="stats-card">
+        <h4>آمار مدل</h4>
+        <div class="stat"><span class="k">نام:</span><span class="v" id="st-name">--</span></div>
+        <div class="stat"><span class="k">مثلث‌ها:</span><span class="v" id="st-tris">--</span></div>
+        <div class="stat"><span class="k">رأس‌ها:</span><span class="v" id="st-verts">--</span></div>
+        <div class="stat"><span class="k">مش‌ها:</span><span class="v" id="st-meshes">--</span></div>
+        <div class="stat"><span class="k">تکسچرها:</span><span class="v" id="st-textures">--</span></div>
+        <div class="stat"><span class="k">ابعاد:</span><span class="v" id="st-dim">--</span></div>
+      </div>
+
+      <!-- Info Overlay -->
+      <div id="info-overlay">
+        <span>FPS <span class="value" id="fps">--</span></span>
+        <span>مثلث <span class="value" id="tri-count">--</span></span>
+        <span id="status-info">آماده</span>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading">
+        <div class="spinner"></div>
+        <div class="msg" id="loading-msg">در حال بارگذاری...</div>
+      </div>
+
+      <div id="annotations-overlay" style="position:absolute;inset:0;pointer-events:none;z-index:8;"></div>
+    </div>
+
+    <!-- Sidebar Right -->
+    <aside id="sidebar-right">
+      <div id="tabs">
+        <div class="tab active" data-tab="material"><span class="tab-icon">🎨</span><span>متریال</span></div>
+        <div class="tab" data-tab="textures"><span class="tab-icon">🖼️</span><span>تکسچرها</span></div>
+        <div class="tab" data-tab="environment"><span class="tab-icon">🌅</span><span>محیط</span></div>
+        <div class="tab" data-tab="scene"><span class="tab-icon">🎬</span><span>صحنه</span></div>
+        <div class="tab" data-tab="annotations"><span class="tab-icon">📍</span><span>یادداشت</span></div>
+        <div class="tab" data-tab="export"><span class="tab-icon">📤</span><span>خروجی</span></div>
+      </div>
+
+      <div id="tab-panels">
+
+        <!-- ==================== Material Tab ==================== -->
+        <div class="tab-panel active" data-panel="material">
+          <div class="section">
+            <div class="section-title">نوع متریال</div>
+            <div class="ctrl">
+              <select id="sel-materialtype">
+                <option value="keep" selected>حفظ متریال اصلی</option>
+                <option value="standard">استاندارد (PBR)</option>
+                <option value="physical">فیزیکی (Clearcoat / IOR)</option>
+                <option value="phong">فونگ (براق کلاسیک)</option>
+                <option value="lambert">لمبرت (مات ساده)</option>
+                <option value="toon">توون (کارتونی)</option>
+                <option value="normal">نرمال (Normal)</option>
+                <option value="basic">پایه (بدون نورپردازی)</option>
+              </select>
+            </div>
+            <div style="font-size:10px;color:var(--text-mute);margin-top:8px;line-height:1.75;">
+              💡 حالت «حفظ متریال اصلی» برای مدل‌های دارای تکسچر مناسب است. برای ویرایش تکسچرها به تب <strong style="color:var(--accent);">تکسچرها</strong> بروید.
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">رنگ پایه</div>
+            <div class="swatch-row" id="color-swatches">
+              <div class="swatch active" style="background:#58a6ff" data-color="#58a6ff"></div>
+              <div class="swatch" style="background:#ff6b6b" data-color="#ff6b6b"></div>
+              <div class="swatch" style="background:#51cf66" data-color="#51cf66"></div>
+              <div class="swatch" style="background:#ffd43b" data-color="#ffd43b"></div>
+              <div class="swatch" style="background:#cc5de8" data-color="#cc5de8"></div>
+              <div class="swatch" style="background:#20c997" data-color="#20c997"></div>
+              <div class="swatch" style="background:#f8f9fa" data-color="#f8f9fa"></div>
+              <div class="swatch" style="background:#868e96" data-color="#868e96"></div>
+            </div>
+            <div class="ctrl" style="margin-top:10px;">
+              <label>رنگ دلخواه:</label>
+              <input type="color" id="color-custom" value="#58a6ff">
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">پارامترهای PBR</div>
+            <div class="ctrl">
+              <label>فلزیت</label>
+              <input type="range" id="s-metalness" min="0" max="1" step="0.01" value="0.5">
+              <span class="val-badge" id="v-metalness">0.50</span>
+            </div>
+            <div class="ctrl">
+              <label>زبری</label>
+              <input type="range" id="s-roughness" min="0" max="1" step="0.01" value="0.4">
+              <span class="val-badge" id="v-roughness">0.40</span>
+            </div>
+            <div class="ctrl">
+              <label>شفافیت</label>
+              <input type="range" id="s-opacity" min="0.05" max="1" step="0.01" value="1">
+              <span class="val-badge" id="v-opacity">1.00</span>
+            </div>
+            <div class="ctrl">
+              <label>ضریب بازتاب</label>
+              <input type="range" id="s-envintensity" min="0" max="3" step="0.05" value="1">
+              <span class="val-badge" id="v-envintensity">1.00</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">حالت نمایش</div>
+            <div class="ctrl">
+              <label>حالت:</label>
+              <select id="sel-displaymode">
+                <option value="solid">جامد (Solid)</option>
+                <option value="wireframe">سیمی (Wireframe)</option>
+                <option value="points">نقاط (Points)</option>
+                <option value="xray">اشعه ایکس (X-Ray)</option>
+              </select>
+            </div>
+            <div class="ctrl">
+              <label>نمایش دو طرفه</label>
+              <label class="switch"><input type="checkbox" id="sw-doubleside" checked><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== Textures Tab ==================== -->
+        <div class="tab-panel" data-panel="textures">
+          <div class="section">
+            <div class="section-title">تکسچرهای موجود در مدل</div>
+            <p style="font-size:11px;color:var(--text-mute);line-height:1.8;margin-bottom:12px;">
+              این لیست به‌طور خودکار از متریال‌های مدل استخراج می‌شود. روی هر کارت کلیک کنید تا ویرایشگر آن باز شود.
+            </p>
+            <div id="existing-textures-list">
+              <div class="existing-tex-empty">هنوز مدلی بارگذاری نشده</div>
+            </div>
+          </div>
+
+          <div class="section" id="extract-section" style="display:none;">
+            <div class="section-title">استخراج بافت‌ها</div>
+            <div class="btn-row" style="margin-bottom:6px;">
+              <button class="btn success" id="btn-extract-all">📥 استخراج همه بافت‌ها</button>
+            </div>
+            <button class="btn" id="btn-extract-report">📋 گزارش متنی بافت‌ها</button>
+            <div style="font-size:10px;color:var(--text-mute);margin-top:8px;line-height:1.75;">
+              💡 همه فایل‌ها با پسوند صحیح (PNG/JPG) و نام‌گذاری خودکار در یک پکیج ZIP دانلود می‌شوند.
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">افزودن تکسچر جدید</div>
+            <div class="texture-drop" id="texture-drop">
+              <input type="file" id="texture-input" accept="image/png,image/jpeg,image/webp,image/bmp" hidden>
+              <div class="tex-preview" id="tex-preview">
+                <span class="tex-placeholder">🖼️</span>
+              </div>
+              <div class="tex-info">
+                <div class="tex-name" id="tex-name">تصویری انتخاب نشده</div>
+                <div class="tex-hint">PNG / JPG / WebP / BMP</div>
+              </div>
+            </div>
+
+            <div class="ctrl" style="margin-top:10px;">
+              <label>اسلات مقصد:</label>
+              <select id="sel-textype">
+                <option value="map" selected>Base Color</option>
+                <option value="normalMap">Normal Map</option>
+                <option value="roughnessMap">Roughness Map</option>
+                <option value="metalnessMap">Metalness Map</option>
+                <option value="aoMap">Ambient Occlusion</option>
+                <option value="emissiveMap">Emissive Map</option>
+              </select>
+            </div>
+
+            <div class="btn-row" style="margin-top:8px;">
+              <button class="btn primary" id="btn-tex-pick">📁 انتخاب و اعمال</button>
+              <button class="btn danger" id="btn-tex-clear">🗑 حذف</button>
+            </div>
+
+            <div class="ctrl" style="margin-top:12px;">
+              <label>تولید UV خودکار</label>
+              <label class="switch"><input type="checkbox" id="sw-autouv" checked><span class="slider"></span></label>
+            </div>
+            <div class="ctrl">
+              <label>تکرار X</label>
+              <input type="range" id="s-texrepeatx" min="0.1" max="10" step="0.1" value="1">
+              <span class="val-badge" id="v-texrepeatx">1.0</span>
+            </div>
+            <div class="ctrl">
+              <label>تکرار Y</label>
+              <input type="range" id="s-texrepeaty" min="0.1" max="10" step="0.1" value="1">
+              <span class="val-badge" id="v-texrepeaty">1.0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== Environment Tab ==================== -->
+        <div class="tab-panel" data-panel="environment">
+          <div class="section">
+            <div class="section-title">محیط HDRI</div>
+            <div class="env-grid" id="env-grid">
+              <div class="env-item env-studio active" data-env="studio"><div class="env-label">استودیو</div></div>
+              <div class="env-item env-sunset" data-env="sunset"><div class="env-label">غروب</div></div>
+              <div class="env-item env-forest" data-env="forest"><div class="env-label">جنگل</div></div>
+              <div class="env-item env-night" data-env="night"><div class="env-label">شب</div></div>
+              <div class="env-item env-warehouse" data-env="warehouse"><div class="env-label">انبار</div></div>
+              <div class="env-item env-city" data-env="city"><div class="env-label">شهر</div></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">نورپردازی</div>
+            <div class="ctrl">
+              <label>نور محیط</label>
+              <input type="range" id="s-ambient" min="0" max="2" step="0.05" value="0.5">
+              <span class="val-badge" id="v-ambient">0.50</span>
+            </div>
+            <div class="ctrl">
+              <label>نور کلیدی</label>
+              <input type="range" id="s-key" min="0" max="3" step="0.05" value="1.2">
+              <span class="val-badge" id="v-key">1.20</span>
+            </div>
+            <div class="ctrl">
+              <label>نور پرکننده</label>
+              <input type="range" id="s-fill" min="0" max="2" step="0.05" value="0.5">
+              <span class="val-badge" id="v-fill">0.50</span>
+            </div>
+            <div class="ctrl">
+              <label>نور لبه</label>
+              <input type="range" id="s-rim" min="0" max="2" step="0.05" value="0.3">
+              <span class="val-badge" id="v-rim">0.30</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">پس‌زمینه</div>
+            <div class="ctrl">
+              <label>رنگ پس‌زمینه:</label>
+              <input type="color" id="color-bg" value="#0a0e14">
+            </div>
+            <div class="ctrl">
+              <label>نمایش محیط در پس‌زمینه</label>
+              <label class="switch"><input type="checkbox" id="sw-showenv"><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== Scene Tab ==================== -->
+        <div class="tab-panel" data-panel="scene">
+          <div class="section">
+            <div class="section-title">نمایش‌ها</div>
+            <div class="ctrl">
+              <label>نمایش گرید</label>
+              <label class="switch"><input type="checkbox" id="sw-grid" checked><span class="slider"></span></label>
+            </div>
+            <div class="ctrl">
+              <label>نمایش محورها</label>
+              <label class="switch"><input type="checkbox" id="sw-axes" checked><span class="slider"></span></label>
+            </div>
+            <div class="ctrl">
+              <label>سایه‌ها</label>
+              <label class="switch"><input type="checkbox" id="sw-shadows" checked><span class="slider"></span></label>
+            </div>
+            <div class="ctrl">
+              <label>چرخش خودکار</label>
+              <label class="switch"><input type="checkbox" id="sw-autorotate"><span class="slider"></span></label>
+            </div>
+            <div class="ctrl">
+              <label>سرعت چرخش</label>
+              <input type="range" id="s-rotspeed" min="0.5" max="10" step="0.5" value="2">
+              <span class="val-badge" id="v-rotspeed">2.0</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">دوربین</div>
+            <div class="ctrl">
+              <label>زاویه دید (FOV)</label>
+              <input type="range" id="s-fov" min="20" max="100" step="1" value="45">
+              <span class="val-badge" id="v-fov">45</span>
+            </div>
+            <div class="ctrl">
+              <label>میرایی</label>
+              <input type="range" id="s-damping" min="0" max="0.3" step="0.01" value="0.08">
+              <span class="val-badge" id="v-damping">0.08</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">افکت‌ها</div>
+            <div class="ctrl">
+              <label>Bloom (درخشش)</label>
+              <label class="switch"><input type="checkbox" id="sw-bloom"><span class="slider"></span></label>
+            </div>
+            <div class="ctrl">
+              <label>شدت Bloom</label>
+              <input type="range" id="s-bloomint" min="0" max="2" step="0.05" value="0.5">
+              <span class="val-badge" id="v-bloomint">0.50</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== Annotations Tab ==================== -->
+        <div class="tab-panel" data-panel="annotations">
+          <div class="section">
+            <div class="section-title">حاشیه‌نویسی‌ها</div>
+            <p style="font-size:11px;color:var(--text-mute);line-height:1.8;margin-bottom:12px;">
+              برای افزودن، دکمه <strong style="color:var(--accent);">📍</strong> در نوار ابزار را بزنید و روی مدل کلیک کنید.
+            </p>
+            <div id="annotations-list">
+              <div class="empty-list">هنوز حاشیه‌نویسی اضافه نشده</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">افزودن سریع</div>
+            <button class="btn primary" id="btn-add-annot">📍 افزودن حاشیه‌نویسی</button>
+            <button class="btn danger" id="btn-clear-annots" style="margin-top:6px;">🗑 پاک کردن همه</button>
+          </div>
+        </div>
+
+        <!-- ==================== Export Tab ==================== -->
+        <div class="tab-panel" data-panel="export">
+          <div class="section">
+            <div class="section-title">خروجی مدل</div>
+            <button class="btn" id="ex-obj">📤 خروجی OBJ</button>
+            <button class="btn" id="ex-stl" style="margin-top:6px;">📤 خروجی STL (Binary)</button>
+            <button class="btn success" id="ex-gltf" style="margin-top:6px;">📤 خروجی GLB (با تکسچر)</button>
+            <button class="btn" id="ex-json" style="margin-top:6px;">📋 خروجی JSON</button>
+          </div>
+
+          <div class="section">
+            <div class="section-title">تصویر</div>
+            <button class="btn" id="ex-screenshot">📷 اسکرین‌شات PNG</button>
+            <button class="btn" id="ex-screenshot-hi" style="margin-top:6px;">📷 اسکرین‌شات 4K</button>
+          </div>
+
+          <div class="section">
+            <div class="section-title">اشتراک‌گذاری</div>
+            <button class="btn" id="ex-embed">🔗 کد Embed</button>
+            <button class="btn" id="ex-link" style="margin-top:6px;">🔗 کپی لینک</button>
+          </div>
+
+          <div class="section">
+            <div class="section-title">عملیات</div>
+            <button class="btn danger" id="ex-clear">🗑 حذف مدل فعلی</button>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<input type="file" id="file-input" accept=".stl,.obj,.gltf,.glb,.ply,.fbx,.mtl,.png,.jpg,.jpeg,.webp,.bmp,.bin" multiple hidden>
+
+<div id="toast"></div>
+
+<!-- ==================== Modal ==================== -->
+<div id="modal-backdrop">
+  <div id="modal">
+    <h3>
+      <span class="icon" id="modal-icon">ℹ</span>
+      <span id="modal-title">اطلاعیه</span>
+    </h3>
+    <div id="modal-body">متن پیام</div>
+    <div class="btn-row">
+      <button class="btn" id="modal-cancel">انصراف</button>
+      <button class="btn primary" id="modal-confirm">تأیید</button>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { STLExporter } from 'three/addons/exporters/STLExporter.js';
+import { OBJExporter } from 'three/addons/exporters/OBJExporter.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// ============================================================
+// Toast & Modal
+// ============================================================
+const toast = document.getElementById('toast');
+let toastTimer;
+function showToast(msg, type = 'info') {
+  toast.textContent = msg;
+  toast.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.className = '', 2800);
+}
+
+let modalResolve = null;
+function showModal(title, bodyHTML, { confirmText = 'تأیید', cancelText = 'انصراف', showCancel = true, icon = 'ℹ' } = {}) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHTML;
+  document.getElementById('modal-icon').textContent = icon;
+  document.getElementById('modal-confirm').textContent = confirmText;
+  document.getElementById('modal-cancel').textContent = cancelText;
+  document.getElementById('modal-cancel').style.display = showCancel ? '' : 'none';
+  document.getElementById('modal-backdrop').classList.add('active');
+
+  return new Promise((resolve) => {
+    modalResolve = resolve;
+  });
+}
+document.getElementById('modal-confirm').onclick = () => {
+  document.getElementById('modal-backdrop').classList.remove('active');
+  if (modalResolve) modalResolve(true);
+  modalResolve = null;
+};
+document.getElementById('modal-cancel').onclick = () => {
+  document.getElementById('modal-backdrop').classList.remove('active');
+  if (modalResolve) modalResolve(false);
+  modalResolve = null;
+};
+
+async function customConfirm(title, body, opts) {
+  return showModal(title, body, opts);
+}
+async function customPrompt(title, defaultValue = '') {
+  const body = `<input type="text" id="modal-prompt-input" value="${defaultValue}" style="width:100%;padding:10px 12px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-top:8px;" />`;
+  showModal(title, body, { confirmText: 'ثبت', icon: '✏' });
+  setTimeout(() => {
+    const inp = document.getElementById('modal-prompt-input');
+    if (inp) { inp.focus(); inp.select(); }
+  }, 100);
+  const res = await new Promise(r => { modalResolve = r; });
+  if (res) {
+    const inp = document.getElementById('modal-prompt-input');
+    return inp ? inp.value : null;
+  }
+  return null;
+}
+
+// ============================================================
+// Scene Setup
+// ============================================================
+const viewport = document.getElementById('viewport');
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0e14);
+
+const camera = new THREE.PerspectiveCamera(
+  45, viewport.clientWidth / viewport.clientHeight, 0.1, 100000
+);
+camera.position.set(80, 60, 100);
+
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  preserveDrawingBuffer: true,
+  powerPreference: 'high-performance'
+});
+renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+viewport.appendChild(renderer.domElement);
+
+// ============================================================
+// Controls
+// ============================================================
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.screenSpacePanning = true;
+controls.maxDistance = 50000;
+controls.minDistance = 0.5;
+controls.autoRotateSpeed = 2.0;
+
+// ============================================================
+// Environment (Procedural HDRI)
+// ============================================================
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+pmremGenerator.compileEquirectangularShader();
+
+const envTextures = {};
+function getEnvironmentTexture(envName) {
+  if (envTextures[envName]) return envTextures[envName];
+  const envScene = new THREE.Scene();
+  const colors = {
+    studio:    { top: 0xffffff, bottom: 0x444444, light: 0xffffff },
+    sunset:    { top: 0xff9a56, bottom: 0x2c1a4d, light: 0xffb347 },
+    forest:    { top: 0x88d498, bottom: 0x1a3d2e, light: 0xa8e6a8 },
+    night:     { top: 0x1a1f3a, bottom: 0x050510, light: 0x4a5fc1 },
+    warehouse: { top: 0xb0b8c0, bottom: 0x2a2e35, light: 0xd0d8e0 },
+    city:      { top: 0x5a6a9a, bottom: 0x1a1e2e, light: 0x8090c0 }
+  };
+  const c = colors[envName] || colors.studio;
+
+  const topGeo = new THREE.SphereGeometry(100, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+  envScene.add(new THREE.Mesh(topGeo, new THREE.MeshBasicMaterial({ color: c.top, side: THREE.BackSide })));
+
+  const botGeo = new THREE.SphereGeometry(100, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
+  envScene.add(new THREE.Mesh(botGeo, new THREE.MeshBasicMaterial({ color: c.bottom, side: THREE.BackSide })));
+
+  for (let i = 0; i < 3; i++) {
+    const angle = (i / 3) * Math.PI * 2;
+    const box = new THREE.Mesh(
+      new THREE.PlaneGeometry(30, 30),
+      new THREE.MeshBasicMaterial({ color: c.light, side: THREE.DoubleSide })
+    );
+    box.position.set(Math.cos(angle) * 50, 40, Math.sin(angle) * 50);
+    box.lookAt(0, 0, 0);
+    envScene.add(box);
+  }
+
+  const envMap = pmremGenerator.fromScene(envScene, 0.04).texture;
+  envTextures[envName] = envMap;
+  envScene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+  return envMap;
+}
+
+let currentEnv = 'studio';
+function applyEnvironment(envName) {
+  currentEnv = envName;
+  const tex = getEnvironmentTexture(envName);
+  scene.environment = tex;
+  if (document.getElementById('sw-showenv').checked) {
+    scene.background = tex;
+  }
+}
+applyEnvironment('studio');
+
+// ============================================================
+// Lighting
+// ============================================================
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambient);
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+keyLight.position.set(200, 300, 200);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.camera.near = 1;
+keyLight.shadow.camera.far = 2000;
+keyLight.shadow.camera.left = -300;
+keyLight.shadow.camera.right = 300;
+keyLight.shadow.camera.top = 300;
+keyLight.shadow.camera.bottom = -300;
+keyLight.shadow.bias = -0.0001;
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0x8ab4ff, 0.5);
+fillLight.position.set(-200, 100, -100);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xffd0a0, 0.3);
+rimLight.position.set(0, -100, 200);
+scene.add(rimLight);
+
+// ============================================================
+// Grid & Axes & Ground
+// ============================================================
+let grid, axes, ground;
+function buildGrid(size = 200, divisions = 20) {
+  if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
+  grid = new THREE.GridHelper(size, divisions, 0x1fb6ff, 0x2a323d);
+  grid.material.transparent = true;
+  grid.material.opacity = 0.35;
+  grid.visible = document.getElementById('sw-grid').checked;
+  scene.add(grid);
+}
+function buildAxes(length = 80) {
+  if (axes) { scene.remove(axes); axes.dispose?.(); }
+  axes = new THREE.AxesHelper(length);
+  axes.visible = document.getElementById('sw-axes').checked;
+  scene.add(axes);
+}
+function buildGround(size = 400) {
+  if (ground) { scene.remove(ground); ground.geometry.dispose(); ground.material.dispose(); }
+  const geo = new THREE.PlaneGeometry(size, size);
+  const mat = new THREE.ShadowMaterial({ opacity: 0.3 });
+  ground = new THREE.Mesh(geo, mat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  ground.visible = document.getElementById('sw-shadows').checked;
+  scene.add(ground);
+}
+buildGrid();
+buildAxes();
+buildGround();
+
+// ============================================================
+// Post-processing
+// ============================================================
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(viewport.clientWidth, viewport.clientHeight),
+  0.5, 0.4, 0.85
+);
+bloomPass.enabled = false;
+composer.addPass(bloomPass);
+composer.addPass(new OutputPass());
+
+// ============================================================
+// State
+// ============================================================
+let currentObject = null;
+let currentFileName = '';
+let currentStats = null;
+let currentMaterialType = 'keep';
+let pointsOverlay = null;
+const annotations = [];
+let annotateMode = false;
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+const materialState = {
+  color: 0x58a6ff,
+  metalness: 0.5,
+  roughness: 0.4,
+  opacity: 1,
+  envMapIntensity: 1,
+  flatShading: false,
+  doubleSide: true,
+};
+
+// ============================================================
+// Texture Registry
+// ============================================================
+const TEXTURE_SLOTS = [
+  'map', 'normalMap', 'bumpMap', 'roughnessMap', 'metalnessMap',
+  'aoMap', 'emissiveMap', 'alphaMap', 'displacementMap',
+  'lightMap', 'specularMap', 'clearcoatMap', 'clearcoatNormalMap',
+  'clearcoatRoughnessMap', 'sheenColorMap', 'sheenRoughnessMap',
+  'transmissionMap', 'thicknessMap', 'iridescenceMap'
+];
+
+const SLOT_LABELS = {
+  map: 'Base Color',
+  normalMap: 'Normal',
+  bumpMap: 'Bump',
+  roughnessMap: 'Roughness',
+  metalnessMap: 'Metalness',
+  aoMap: 'Ambient Occlusion',
+  emissiveMap: 'Emissive',
+  alphaMap: 'Alpha',
+  displacementMap: 'Displacement',
+  lightMap: 'Light',
+  specularMap: 'Specular',
+  clearcoatMap: 'Clearcoat',
+  clearcoatNormalMap: 'Clearcoat Normal',
+  clearcoatRoughnessMap: 'Clearcoat Roughness',
+  sheenColorMap: 'Sheen Color',
+  sheenRoughnessMap: 'Sheen Roughness',
+  transmissionMap: 'Transmission',
+  thicknessMap: 'Thickness',
+  iridescenceMap: 'Iridescence'
+};
+
+const textureRegistry = new Map();
+
+function getMaterialKey(mat, slot) {
+  return mat.uuid + '::' + slot;
+}
+
+function scanModelTextures() {
+  textureRegistry.clear();
+  if (!currentObject) return;
+
+  currentObject.traverse(child => {
+    if (!child.isMesh || !child.material) return;
+    const mats = Array.isArray(child.material) ? child.material : [child.material];
+    mats.forEach(mat => {
+      TEXTURE_SLOTS.forEach(slot => {
+        if (mat[slot] && mat[slot].isTexture) {
+          const key = getMaterialKey(mat, slot);
+          if (!textureRegistry.has(key)) {
+            const tex = mat[slot];
+            textureRegistry.set(key, {
+              key,
+              slot,
+              material: mat,
+              materialName: mat.name || 'unnamed',
+              originalTexture: tex,
+              originalDataURL: textureToDataURL(tex),
+              currentDataURL: textureToDataURL(tex),
+              enabled: true,
+              repeat: { x: tex.repeat.x, y: tex.repeat.y },
+              offset: { x: tex.offset.x, y: tex.offset.y },
+              rotation: tex.rotation,
+              color: mat.color ? '#' + mat.color.getHexString() : '#ffffff',
+              width: tex.image ? (tex.image.width || 0) : 0,
+              height: tex.image ? (tex.image.height || 0) : 0,
+            });
+          }
+        }
+      });
+    });
+  });
+
+  renderExistingTextures();
+  updateTextureCount();
+  toggleExtractSection();
+}
+
+function toggleExtractSection() {
+  const sec = document.getElementById('extract-section');
+  if (textureRegistry.size > 0) sec.style.display = 'block';
+  else sec.style.display = 'none';
+}
+
+function textureToDataURL(texture) {
+  if (!texture || !texture.image) return null;
+  try {
+    if (typeof texture.image.src === 'string' && texture.image.src.startsWith('data:')) {
+      return texture.image.src;
+    }
+    if (texture.image instanceof HTMLCanvasElement) {
+      return texture.image.toDataURL('image/png');
+    }
+    const w = texture.image.width || 64;
+    const h = texture.image.height || 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(texture.image, 0, 0, w, h);
+    return canvas.toDataURL('image/png');
+  } catch (e) {
+    return null;
+  }
+}
+
+function updateTextureCount() {
+  const el = document.getElementById('st-textures');
+  if (el) el.textContent = textureRegistry.size;
+}
+
+// ============================================================
+// Render existing textures as cards
+// ============================================================
+function renderExistingTextures() {
+  const list = document.getElementById('existing-textures-list');
+  if (!list) return;
+
+  if (textureRegistry.size === 0) {
+    list.innerHTML = '<div class="existing-tex-empty">هیچ تکسچری در این مدل یافت نشد<br><span style="font-size:10px;">(برای افزودن، از بخش پایین استفاده کنید)</span></div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  textureRegistry.forEach((entry, key) => {
+    const card = document.createElement('div');
+    card.className = 'tex-card' + (entry.enabled ? '' : ' disabled');
+    card.dataset.key = key;
+
+    const dataURL = entry.currentDataURL || entry.originalDataURL;
+    const sizeText = entry.width && entry.height ? `${entry.width}×${entry.height}` : '?';
+
+    card.innerHTML = `
+      <div class="tex-card-head">
+        <div class="tex-card-thumb">
+          ${dataURL ? `<img src="${dataURL}" alt="${entry.slot}">` : '<span>🖼️</span>'}
+        </div>
+        <div class="tex-card-info">
+          <div class="tex-card-title">
+            <span class="slot-dot"></span>
+            ${SLOT_LABELS[entry.slot] || entry.slot}
+          </div>
+          <div class="tex-card-sub">${entry.materialName} • ${sizeText}</div>
+        </div>
+        <div class="tex-card-arrow">▼</div>
+      </div>
+      <div class="tex-card-body">
+        <div class="tex-slot-badge">${entry.slot}</div>
+
+        <div class="tex-meta-row"><span>اسلات فنی:</span><span>${entry.slot}</span></div>
+        <div class="tex-meta-row"><span>ابعاد:</span><span>${sizeText}</span></div>
+
+        <div class="ctrl" style="margin-top:8px;">
+          <label>فعال</label>
+          <label class="switch"><input type="checkbox" data-act="toggle" ${entry.enabled ? 'checked' : ''}><span class="slider"></span></label>
+        </div>
+
+        ${entry.slot === 'map' ? `
+          <div class="ctrl">
+            <label>رنگ ضریب</label>
+            <input type="color" data-act="color" value="${entry.color}">
+          </div>
+        ` : ''}
+
+        <div class="ctrl">
+          <label>تکرار X</label>
+          <input type="range" min="0.1" max="10" step="0.1" value="${entry.repeat.x}" data-act="repeatx">
+          <span class="val-badge">${entry.repeat.x.toFixed(1)}</span>
+        </div>
+        <div class="ctrl">
+          <label>تکرار Y</label>
+          <input type="range" min="0.1" max="10" step="0.1" value="${entry.repeat.y}" data-act="repeaty">
+          <span class="val-badge">${entry.repeat.y.toFixed(1)}</span>
+        </div>
+        <div class="ctrl">
+          <label>آفست X</label>
+          <input type="range" min="-1" max="1" step="0.01" value="${entry.offset.x}" data-act="offsetx">
+          <span class="val-badge">${entry.offset.x.toFixed(2)}</span>
+        </div>
+        <div class="ctrl">
+          <label>آفست Y</label>
+          <input type="range" min="-1" max="1" step="0.01" value="${entry.offset.y}" data-act="offsety">
+          <span class="val-badge">${entry.offset.y.toFixed(2)}</span>
+        </div>
+        <div class="ctrl">
+          <label>چرخش</label>
+          <input type="range" min="0" max="6.28" step="0.01" value="${entry.rotation}" data-act="rotation">
+          <span class="val-badge">${entry.rotation.toFixed(2)}</span>
+        </div>
+
+        <div class="tex-actions">
+          <button class="btn primary tiny" data-act="replace">🔄 جایگزینی</button>
+          <button class="btn success tiny" data-act="extract">📥 استخراج</button>
+          <button class="btn danger tiny" data-act="remove">🗑 حذف</button>
+        </div>
+      </div>
+    `;
+
+    card.querySelector('.tex-card-head').onclick = () => {
+      card.classList.toggle('open');
+    };
+
+    card.querySelectorAll('[data-act]').forEach(el => {
+      const act = el.dataset.act;
+      if (act === 'toggle') {
+        el.addEventListener('change', () => {
+          entry.enabled = el.checked;
+          applySingleTextureEntry(entry);
+          card.classList.toggle('disabled', !entry.enabled);
+        });
+      } else if (act === 'color') {
+        el.addEventListener('input', () => {
+          entry.color = el.value;
+          if (entry.material.color) entry.material.color.set(el.value);
+          entry.material.needsUpdate = true;
+        });
+      } else if (act === 'replace') {
+        el.addEventListener('click', (e) => { e.stopPropagation(); replaceTexturePrompt(entry); });
+      } else if (act === 'remove') {
+        el.addEventListener('click', (e) => { e.stopPropagation(); removeSingleTexture(entry); });
+      } else if (act === 'extract') {
+        el.addEventListener('click', (e) => { e.stopPropagation(); extractSingleTexture(entry); });
+      } else {
+        el.addEventListener('input', () => {
+          const v = parseFloat(el.value);
+          const badge = el.nextElementSibling;
+          if (badge) badge.textContent = v.toFixed(2);
+          if (act === 'repeatx') entry.repeat.x = v;
+          else if (act === 'repeaty') entry.repeat.y = v;
+          else if (act === 'offsetx') entry.offset.x = v;
+          else if (act === 'offsety') entry.offset.y = v;
+          else if (act === 'rotation') entry.rotation = v;
+          applyTransformToEntry(entry);
+        });
+      }
+    });
+
+    list.appendChild(card);
+  });
+}
+
+function applyTransformToEntry(entry) {
+  const tex = entry.material[entry.slot];
+  if (!tex) return;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(entry.repeat.x, entry.repeat.y);
+  tex.offset.set(entry.offset.x, entry.offset.y);
+  tex.rotation = entry.rotation;
+  tex.center.set(0.5, 0.5);
+  tex.needsUpdate = true;
+  entry.material.needsUpdate = true;
+}
+
+function applySingleTextureEntry(entry) {
+  if (entry.enabled) {
+    entry.material[entry.slot] = entry.originalTexture;
+  } else {
+    entry.material[entry.slot] = null;
+  }
+  entry.material.needsUpdate = true;
+}
+
+async function replaceTexturePrompt(entry) {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/png,image/jpeg,image/webp,image/bmp';
+  inp.onchange = async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    await replaceTextureWithFile(entry, f);
+  };
+  inp.click();
+}
+
+async function replaceTextureWithFile(entry, file) {
+  try {
+    const dataURL = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+
+    const tex = await new Promise((res, rej) => {
+      new THREE.TextureLoader().load(dataURL, res, undefined, rej);
+    });
+
+    const isColor = ['map', 'emissiveMap', 'sheenColorMap'].includes(entry.slot);
+    tex.colorSpace = isColor ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    tex.repeat.set(entry.repeat.x, entry.repeat.y);
+    tex.offset.set(entry.offset.x, entry.offset.y);
+    tex.rotation = entry.rotation;
+    tex.center.set(0.5, 0.5);
+    tex.needsUpdate = true;
+
+    entry.material[entry.slot] = tex;
+    entry.material.needsUpdate = true;
+    entry.enabled = true;
+    entry.currentDataURL = dataURL;
+    entry.width = tex.image?.width || 0;
+    entry.height = tex.image?.height || 0;
+
+    renderExistingTextures();
+    showToast('تکسچر جایگزین شد', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('خطا در جایگزینی', 'error');
+  }
+}
+
+function removeSingleTexture(entry) {
+  entry.material[entry.slot] = null;
+  entry.material.needsUpdate = true;
+  entry.enabled = false;
+  renderExistingTextures();
+  showToast('تکسچر حذف شد', 'warning');
+}
+
+// ============================================================
+// Extract Textures
+// ============================================================
+function safeFileName(str) {
+  return str.replace(/[^a-zA-Z0-9_\-\.]/g, '_').slice(0, 60);
+}
+
+function dataURLToBlob(dataURL) {
+  const arr = dataURL.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) u8arr[n] = bstr.charCodeAt(n);
+  return new Blob([u8arr], { type: mime });
+}
+
+function extFromMime(mime) {
+  if (mime.includes('jpeg') || mime.includes('jpg')) return 'jpg';
+  if (mime.includes('webp')) return 'webp';
+  return 'png';
+}
+
+async function extractSingleTexture(entry) {
+  const dataURL = entry.currentDataURL || entry.originalDataURL;
+  if (!dataURL) {
+    showToast('قابل استخراج نیست (مشکل CORS)', 'error');
+    return;
+  }
+  const blob = dataURLToBlob(dataURL);
+  const ext = extFromMime(blob.type);
+  const base = currentFileName.replace(/\.[^.]+$/, '') || 'model';
+  const name = `${base}_${safeFileName(entry.materialName)}_${entry.slot}.${ext}`;
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 200);
+  showToast('بافت استخراج شد', 'success');
+}
+
+async function extractAllTextures() {
+  if (textureRegistry.size === 0) {
+    showToast('بافتی برای استخراج وجود ندارد', 'error');
+    return;
+  }
+
+  showLoading(true, 'در حال آماده‌سازی بافت‌ها...');
+
+  try {
+    const base = currentFileName.replace(/\.[^.]+$/, '') || 'model';
+    const files = [];
+
+    let idx = 0;
+    for (const [key, entry] of textureRegistry) {
+      idx++;
+      const dataURL = entry.currentDataURL || entry.originalDataURL;
+      if (!dataURL) continue;
+
+      const blob = dataURLToBlob(dataURL);
+      const ext = extFromMime(blob.type);
+      const slotLabel = SLOT_LABELS[entry.slot] || entry.slot;
+      const safeSlot = safeFileName(slotLabel);
+      const safeMat = safeFileName(entry.materialName);
+      const filename = `${String(idx).padStart(2,'0')}_${safeMat}_${safeSlot}.${ext}`;
+      files.push({ filename, blob });
+    }
+
+    if (files.length === 0) {
+      showToast('بافتی قابل استخراج نبود', 'error');
+      showLoading(false);
+      return;
+    }
+
+    // Try to build ZIP using JSZip from CDN
+    let JSZip;
+    try {
+      const mod = await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm');
+      JSZip = mod.default || mod;
+    } catch (e) {
+      console.warn('JSZip load failed, falling back to individual downloads', e);
+    }
+
+    if (JSZip) {
+      const zip = new JSZip();
+      const folder = zip.folder(base + '_textures');
+      files.forEach(f => folder.file(f.filename, f.blob));
+
+      // Add a manifest
+      const manifest = files.map((f, i) => {
+        const entry = Array.from(textureRegistry.values())[i];
+        return `${f.filename}  →  slot: ${entry?.slot || '?'}  material: ${entry?.materialName || '?'}`;
+      }).join('\n');
+      folder.file('_manifest.txt',
+        `SketchView 3D Texture Export\n` +
+        `Model: ${currentFileName}\n` +
+        `Date: ${new Date().toISOString()}\n` +
+        `Total textures: ${files.length}\n\n` +
+        `Files:\n${manifest}\n`
+      );
+
+      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(zipBlob);
+      a.download = `${base}_textures.zip`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 500);
+      showToast(`${files.length} بافت در ZIP ذخیره شد`, 'success');
+    } else {
+      // Fallback: individual downloads with delay
+      for (const f of files) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(f.blob);
+        a.download = f.filename;
+        a.click();
+        await new Promise(r => setTimeout(r, 350));
+      }
+      showToast(`${files.length} بافت دانلود شد`, 'success');
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('خطا در استخراج', 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function extractTextureReport() {
+  if (textureRegistry.size === 0) {
+    showToast('بافتی موجود نیست', 'error');
+    return;
+  }
+
+  const base = currentFileName.replace(/\.[^.]+$/, '') || 'model';
+  let report = `# گزارش بافت‌های مدل\n\n`;
+  report += `**نام مدل:** ${currentFileName}\n`;
+  report += `**تاریخ:** ${new Date().toLocaleString('fa-IR')}\n`;
+  report += `**تعداد بافت‌ها:** ${textureRegistry.size}\n\n`;
+  report += `---\n\n`;
+
+  let i = 0;
+  for (const entry of textureRegistry.values()) {
+    i++;
+    report += `## ${i}. ${SLOT_LABELS[entry.slot] || entry.slot}\n\n`;
+    report += `- **اسلات فنی:** \`${entry.slot}\`\n`;
+    report += `- **متریال:** ${entry.materialName}\n`;
+    report += `- **ابعاد:** ${entry.width}×${entry.height}\n`;
+    report += `- **وضعیت:** ${entry.enabled ? 'فعال ✓' : 'غیرفعال ✕'}\n`;
+    report += `- **تکرار:** ${entry.repeat.x} × ${entry.repeat.y}\n`;
+    report += `- **آفست:** (${entry.offset.x}, ${entry.offset.y})\n`;
+    report += `- **چرخش:** ${entry.rotation.toFixed(3)} رادیان\n\n`;
+  }
+
+  const blob = new Blob([report], { type: 'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${base}_textures_report.md`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 200);
+  showToast('گزارش دانلود شد', 'success');
+}
+
+// ============================================================
+// Material Factory
+// ============================================================
+function createMaterial(type, mode, mesh) {
+  const hasVC = !!(mesh && mesh.geometry && mesh.geometry.attributes.color);
+
+  const base = {
+    color: materialState.color,
+    opacity: materialState.opacity,
+    transparent: materialState.opacity < 1,
+    flatShading: materialState.flatShading,
+    side: materialState.doubleSide ? THREE.DoubleSide : THREE.FrontSide,
+    wireframe: mode === 'wireframe',
+    vertexColors: hasVC,
+    depthWrite: true,
+  };
+
+  if (mode === 'xray') {
+    base.transparent = true;
+    base.opacity = Math.min(0.3, materialState.opacity);
+    base.depthWrite = false;
+  }
+
+  switch (type) {
+    case 'physical':
+      return new THREE.MeshPhysicalMaterial({
+        ...base,
+        metalness: materialState.metalness,
+        roughness: materialState.roughness,
+        envMapIntensity: materialState.envMapIntensity,
+      });
+    case 'phong':
+      return new THREE.MeshPhongMaterial({
+        ...base,
+        shininess: (1 - materialState.roughness) * 100,
+        envMapIntensity: materialState.envMapIntensity,
+      });
+    case 'lambert':
+      return new THREE.MeshLambertMaterial(base);
+    case 'toon':
+      return new THREE.MeshToonMaterial(base);
+    case 'basic':
+      return new THREE.MeshBasicMaterial(base);
+    case 'normal':
+      return new THREE.MeshNormalMaterial(base);
+    case 'standard':
+    default:
+      return new THREE.MeshStandardMaterial({
+        ...base,
+        metalness: materialState.metalness,
+        roughness: materialState.roughness,
+        envMapIntensity: materialState.envMapIntensity,
+      });
+  }
+}
+
+function disposeMaterials(obj) {
+  if (!obj || !obj.material) return;
+  if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose && m.dispose());
+  else obj.material.dispose && obj.material.dispose();
+}
+
+function rebuildMaterial() {
+  if (!currentObject) return;
+
+  const type = document.getElementById('sel-materialtype').value;
+  const mode = document.getElementById('sel-displaymode').value;
+
+  if (pointsOverlay) { scene.remove(pointsOverlay); pointsOverlay = null; }
+
+  currentObject.visible = true;
+  currentObject.traverse(c => { if (c.isMesh) c.visible = true; });
+
+  if (mode === 'points') {
+    currentObject.traverse(c => { if (c.isMesh) c.visible = false; });
+    createPointsOverlay();
+    return;
+  }
+
+  const keepOriginal = (type === 'keep');
+  currentObject.traverse(child => {
+    if (!child.isMesh) return;
+
+    if (keepOriginal) {
+      const mats = Array.isArray(child.material) ? child.material : [child.material];
+      mats.forEach(m => {
+        if (!m) return;
+        if (mode === 'wireframe') m.wireframe = true;
+        else m.wireframe = false;
+        if (mode === 'xray') {
+          m.transparent = true; m.opacity = 0.3; m.depthWrite = false;
+        } else {
+          m.transparent = materialState.opacity < 1;
+          m.opacity = materialState.opacity;
+          m.depthWrite = true;
+        }
+        m.needsUpdate = true;
+      });
+      return;
+    }
+
+    disposeMaterials(child);
+    child.material = createMaterial(type, mode, child);
+  });
+
+  currentMaterialType = type;
+  scanModelTextures();
+}
+
+// ============================================================
+// Points Overlay
+// ============================================================
+function createPointsOverlay() {
+  if (pointsOverlay) return;
+  pointsOverlay = new THREE.Group();
+  currentObject.updateMatrixWorld(true);
+
+  const sizeBase = currentStats ? currentStats.size.length() : 100;
+  const pSize = Math.max(0.5, sizeBase / 200);
+
+  currentObject.traverse(c => {
+    if (c.isMesh && c.geometry) {
+      const mat = new THREE.PointsMaterial({
+        color: materialState.color,
+        size: pSize,
+        sizeAttenuation: true,
+      });
+      const pts = new THREE.Points(c.geometry, mat);
+      pts.matrixAutoUpdate = false;
+      pts.matrix.copy(c.matrixWorld);
+      pointsOverlay.add(pts);
+    }
+  });
+  scene.add(pointsOverlay);
+}
+
+// ============================================================
+// UV Generation
+// ============================================================
+function generateAutoUVs(geometry) {
+  if (geometry.attributes.uv) return false;
+
+  geometry.computeBoundingBox();
+  if (!geometry.attributes.normal) geometry.computeVertexNormals();
+
+  const bb = geometry.boundingBox;
+  const size = new THREE.Vector3();
+  bb.getSize(size);
+  if (size.x === 0) size.x = 1;
+  if (size.y === 0) size.y = 1;
+  if (size.z === 0) size.z = 1;
+
+  const pos = geometry.attributes.position;
+  const nrm = geometry.attributes.normal;
+  const uv = new Float32Array(pos.count * 2);
+
+  for (let i = 0; i < pos.count; i++) {
+    const nx = Math.abs(nrm.getX(i));
+    const ny = Math.abs(nrm.getY(i));
+    const nz = Math.abs(nrm.getZ(i));
+    let u, v;
+    if (nx >= ny && nx >= nz) {
+      u = (pos.getZ(i) - bb.min.z) / size.z;
+      v = (pos.getY(i) - bb.min.y) / size.y;
+    } else if (ny >= nx && ny >= nz) {
+      u = (pos.getX(i) - bb.min.x) / size.x;
+      v = (pos.getZ(i) - bb.min.z) / size.z;
+    } else {
+      u = (pos.getX(i) - bb.min.x) / size.x;
+      v = (pos.getY(i) - bb.min.y) / size.y;
+    }
+    uv[i * 2] = u;
+    uv[i * 2 + 1] = v;
+  }
+  geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  return true;
+}
+
+// ============================================================
+// Global Texture State
+// ============================================================
+const globalTexState = {
+  type: 'map',
+  autoUV: true,
+  repeat: { x: 1, y: 1 },
+};
+
+// ============================================================
+// Loading Manager
+// ============================================================
+function makeLoadingManager(files) {
+  const manager = new THREE.LoadingManager();
+  const urlMap = new Map();
+  const byName = {};
+  files.forEach(f => { byName[f.name.toLowerCase()] = f; });
+
+  manager.setURLModifier(url => {
+    const clean = url.split('?')[0].split('#')[0];
+    const base = clean.split('/').pop().toLowerCase();
+    if (byName[base]) {
+      if (!urlMap.has(base)) urlMap.set(base, URL.createObjectURL(byName[base]));
+      return urlMap.get(base);
+    }
+    const full = clean.toLowerCase();
+    if (byName[full]) {
+      if (!urlMap.has(full)) urlMap.set(full, URL.createObjectURL(byName[full]));
+      return urlMap.get(full);
+    }
+    return url;
+  });
+
+  manager._cleanup = () => urlMap.forEach(u => URL.revokeObjectURL(u));
+  return manager;
+}
+
+// ============================================================
+// Loaders
+// ============================================================
+const stlLoader = new STLLoader();
+
+async function loadSTL(buffer) {
+  const geo = stlLoader.parse(buffer);
+  geo.computeVertexNormals();
+  return new THREE.Mesh(geo);
+}
+
+async function loadPLY(buffer) {
+  const loader = new PLYLoader();
+  const geo = loader.parse(buffer);
+  geo.computeVertexNormals();
+  return new THREE.Mesh(geo);
+}
+
+async function loadOBJ(buffer, files) {
+  const text = new TextDecoder().decode(buffer);
+  const manager = makeLoadingManager(files);
+  const loader = new OBJLoader(manager);
+
+  const mtlMatch = text.match(/^\s*mtllib\s+(.+)$/mi);
+  if (mtlMatch) {
+    const mtlName = mtlMatch[1].trim().split(/\s+/)[0].toLowerCase();
+    const mtlFile = files.find(f => f.name.toLowerCase() === mtlName ||
+                                   f.name.toLowerCase().endsWith(mtlName));
+    if (mtlFile) {
+      const mtlText = await mtlFile.text();
+      const mtlLoader = new MTLLoader(manager);
+      try {
+        const materials = mtlLoader.parse(mtlText, '');
+        materials.preload();
+        loader.setMaterials(materials);
+      } catch (e) { console.warn('MTL parse failed:', e); }
+    }
+  }
+
+  const obj = loader.parse(text);
+  setTimeout(manager._cleanup, 10000);
+  return obj;
+}
+
+async function loadGLTF(buffer, files, isGLB) {
+  const manager = makeLoadingManager(files);
+  const loader = new GLTFLoader(manager);
+  return new Promise((resolve, reject) => {
+    const data = isGLB ? buffer : new TextDecoder().decode(buffer);
+    loader.parse(data, '', gltf => {
+      resolve(gltf.scene);
+      setTimeout(manager._cleanup, 10000);
+    }, err => {
+      manager._cleanup();
+      reject(err);
+    });
+  });
+}
+
+async function loadFBX(buffer) {
+  const loader = new FBXLoader();
+  return loader.parse(buffer, '');
+}
+
+// ============================================================
+// File Ingestion
+// ============================================================
+async function loadFiles(files) {
+  if (!files || !files.length) return;
+
+  const mainExts = ['stl','obj','gltf','glb','ply','fbx'];
+  const main = files.find(f => mainExts.includes(f.name.split('.').pop().toLowerCase()));
+  if (!main) {
+    showToast('فرمت پشتیبانی نمی‌شود', 'error');
+    return;
+  }
+  const ext = main.name.split('.').pop().toLowerCase();
+
+  showLoading(true, `در حال بارگذاری ${main.name}...`);
+
+  try {
+    const buf = await main.arrayBuffer();
+    let object;
+    switch (ext) {
+      case 'stl': object = await loadSTL(buf); break;
+      case 'ply': object = await loadPLY(buf); break;
+      case 'obj': object = await loadOBJ(buf, files); break;
+      case 'gltf': object = await loadGLTF(buf, files, false); break;
+      case 'glb': object = await loadGLTF(buf, files, true); break;
+      case 'fbx': object = await loadFBX(buf); break;
+    }
+    if (!object) throw new Error('پارس نشد');
+
+    setupModel(object, main.name);
+    addToGallery(main.name, object);
+    showToast('مدل با موفقیت بارگذاری شد', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('خطا: ' + (err.message || err), 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ============================================================
+// Setup Model
+// ============================================================
+function setupModel(object, fileName) {
+  clearModel(true);
+
+  object.updateMatrixWorld(true);
+  object.traverse(child => {
+    if (child.isMesh) {
+      if (child.geometry && !child.geometry.attributes.normal) {
+        child.geometry.computeVertexNormals();
+      }
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+
+  const box = new THREE.Box3().setFromObject(object);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+
+  const wrapper = new THREE.Group();
+  wrapper.name = '__model_root';
+  object.position.sub(center);
+  wrapper.add(object);
+
+  const stats = computeObjectStats(wrapper);
+  currentStats = stats;
+
+  const maxSize = Math.max(size.x, size.y, size.z) || 100;
+  buildGrid(Math.max(50, maxSize * 3), 20);
+  buildAxes(maxSize * 0.8);
+  buildGround(maxSize * 6);
+
+  scene.add(wrapper);
+  currentObject = wrapper;
+  currentFileName = fileName;
+
+  const selType = document.getElementById('sel-materialtype');
+  if (objectHasRealMaterials(object)) {
+    selType.value = 'keep';
+    currentMaterialType = 'keep';
+  } else {
+    if (selType.value === 'keep') selType.value = 'standard';
+    currentMaterialType = selType.value;
+  }
+
+  if (currentMaterialType === 'keep') {
+    wrapper.traverse(c => {
+      if (c.isMesh && c.material) {
+        const mats = Array.isArray(c.material) ? c.material : [c.material];
+        mats.forEach(m => { m.wireframe = false; m.needsUpdate = true; });
+      }
+    });
+  } else {
+    wrapper.traverse(child => {
+      if (child.isMesh) {
+        disposeMaterials(child);
+        child.material = createMaterial(currentMaterialType, 'solid', child);
+      }
+    });
+  }
+
+  scanModelTextures();
+
+  fitCameraToObject(wrapper);
+  updateStatsUI(stats, fileName);
+  document.getElementById('stats-card').classList.add('visible');
+  document.getElementById('empty-state').style.display = 'none';
+  renderGallery();
+}
+
+function objectHasRealMaterials(obj) {
+  let has = false;
+  obj.traverse(c => {
+    if (c.isMesh && c.material) {
+      const mats = Array.isArray(c.material) ? c.material : [c.material];
+      mats.forEach(m => {
+        if (!m) return;
+        if (m.map || m.normalMap || m.roughnessMap || m.metalnessMap ||
+            m.emissiveMap || m.aoMap || (m.name && m.name.length > 0)) {
+          has = true;
+        }
+      });
+    }
+  });
+  return has;
+}
+
+function clearModel(keepAnnotations = false) {
+  if (currentObject) {
+    scene.remove(currentObject);
+    currentObject.traverse(c => {
+      if (c.isMesh) {
+        c.geometry && c.geometry.dispose && c.geometry.dispose();
+        disposeMaterials(c);
+      }
+    });
+    currentObject = null;
+  }
+  if (pointsOverlay) { scene.remove(pointsOverlay); pointsOverlay = null; }
+  currentStats = null;
+  currentFileName = '';
+  textureRegistry.clear();
+  renderExistingTextures();
+  toggleExtractSection();
+
+  if (!keepAnnotations) clearAllAnnotations();
+
+  document.getElementById('stats-card').classList.remove('visible');
+  document.getElementById('empty-state').style.display = 'flex';
+}
+
+// ============================================================
+// Stats
+// ============================================================
+function computeStats(geometry) {
+  const pos = geometry.attributes.position;
+  if (!pos) return { triCount: 0, vertCount: 0, size: new THREE.Vector3() };
+  const vertCount = pos.count;
+  const triCount = geometry.index ? geometry.index.count / 3 : vertCount / 3;
+
+  geometry.computeBoundingBox();
+  const size = new THREE.Vector3();
+  geometry.boundingBox.getSize(size);
+
+  return { triCount, vertCount, size };
+}
+
+function computeObjectStats(root) {
+  let triCount = 0, vertCount = 0, meshes = 0;
+  const box = new THREE.Box3();
+  root.updateMatrixWorld(true);
+  root.traverse(c => {
+    if (c.isMesh && c.geometry) {
+      meshes++;
+      const s = computeStats(c.geometry);
+      triCount += s.triCount;
+      vertCount += s.vertCount;
+      c.geometry.computeBoundingBox();
+      const gbox = c.geometry.boundingBox.clone();
+      gbox.applyMatrix4(c.matrixWorld);
+      box.union(gbox);
+    }
+  });
+  const size = new THREE.Vector3();
+  if (!box.isEmpty()) box.getSize(size);
+  return { triCount, vertCount, size, meshes };
+}
+
+function fmt(n) {
+  if (!isFinite(n) || n === 0) return '0';
+  const abs = Math.abs(n);
+  if (abs >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (abs >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (abs >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+  if (abs >= 1) return n.toFixed(2);
+  return n.toFixed(4);
+}
+
+function updateStatsUI(stats, fileName) {
+  document.getElementById('st-name').textContent =
+    fileName.length > 20 ? fileName.slice(0, 17) + '...' : fileName;
+  document.getElementById('st-tris').textContent = stats.triCount.toLocaleString('en-US');
+  document.getElementById('st-verts').textContent = stats.vertCount.toLocaleString('en-US');
+  document.getElementById('st-meshes').textContent = stats.meshes ?? 1;
+  document.getElementById('st-dim').textContent =
+    `${fmt(stats.size.x)}×${fmt(stats.size.y)}×${fmt(stats.size.z)}`;
+  document.getElementById('tri-count').textContent = stats.triCount.toLocaleString('en-US');
+}
+
+// ============================================================
+// Camera Helpers
+// ============================================================
+function fitCameraToObject(object) {
+  const box = new THREE.Box3().setFromObject(object);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+
+  const maxDim = Math.max(size.x, size.y, size.z) || 1;
+  const fov = camera.fov * (Math.PI / 180);
+  let distance = maxDim / (2 * Math.tan(fov / 2));
+  distance *= 1.6;
+
+  const dir = new THREE.Vector3(1, 0.7, 1).normalize();
+  camera.position.copy(center).add(dir.multiplyScalar(distance));
+  camera.near = Math.max(0.01, distance / 500);
+  camera.far = distance * 200;
+  camera.updateProjectionMatrix();
+
+  controls.target.copy(center);
+  controls.update();
+}
+
+function resetCamera() {
+  if (currentObject) fitCameraToObject(currentObject);
+  else {
+    camera.position.set(80, 60, 100);
+    controls.target.set(0, 0, 0);
+    controls.update();
+  }
+}
+
+// ============================================================
+// Gallery
+// ============================================================
+const galleryItems = [];
+function addToGallery(fileName, object) {
+  galleryItems.push({ name: fileName, object });
+  renderGallery();
+}
+
+function renderGallery() {
+  const list = document.getElementById('gallery-list');
+  const countEl = document.getElementById('gallery-count');
+  if (countEl) countEl.textContent = galleryItems.length;
+
+  if (galleryItems.length === 0) {
+    list.innerHTML = '<div class="empty-list">هنوز مدلی بارگذاری نکرده‌اید</div>';
+    return;
+  }
+  list.innerHTML = '';
+  galleryItems.forEach((item) => {
+    const div = document.createElement('div');
+    div.className = 'gallery-item' + (item.object === currentObject ? ' active' : '');
+    let verts = 0, tris = 0;
+    item.object.traverse(c => {
+      if (c.isMesh && c.geometry) {
+        verts += c.geometry.attributes.position.count;
+        tris += c.geometry.index ? c.geometry.index.count / 3 : c.geometry.attributes.position.count / 3;
+      }
+    });
+    div.innerHTML = `
+      <div class="thumb">📦</div>
+      <div class="info">
+        <div class="name">${item.name}</div>
+        <div class="meta">
+          <span>◆ ${verts.toLocaleString('en-US')} رأس</span>
+          <span>▲ ${Math.floor(tris).toLocaleString('en-US')} مثلث</span>
+        </div>
+      </div>
+    `;
+    div.onclick = () => {
+      if (item.object === currentObject) return;
+      scene.remove(currentObject);
+      currentObject = item.object;
+      scene.add(currentObject);
+      currentFileName = item.name;
+      const stats = computeObjectStats(currentObject);
+      currentStats = stats;
+      updateStatsUI(stats, currentFileName);
+      scanModelTextures();
+      fitCameraToObject(currentObject);
+      renderGallery();
+    };
+    list.appendChild(div);
+  });
+}
+
+// ============================================================
+// Annotations
+// ============================================================
+const annotationsOverlay = document.getElementById('annotations-overlay');
+let annotCounter = 0;
+
+function toggleAnnotateMode() {
+  if (!currentObject) { showToast('ابتدا یک مدل بارگذاری کنید', 'error'); return; }
+  annotateMode = !annotateMode;
+  document.getElementById('vb-annotate').classList.toggle('active', annotateMode);
+  showToast(annotateMode ? '📍 روی مدل کلیک کنید' : 'حالت حاشیه‌نویسی غیرفعال شد');
+}
+
+async function handleViewportClick(event) {
+  if (!annotateMode || !currentObject) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObject(currentObject, true);
+  if (intersects.length > 0) {
+    addAnnotation(intersects[0].point.clone());
+    annotateMode = false;
+    document.getElementById('vb-annotate').classList.remove('active');
+  }
+}
+
+async function addAnnotation(position, text = null) {
+  annotCounter++;
+  const id = annotCounter;
+  if (!text) {
+    const res = await customPrompt('متن حاشیه‌نویسی را وارد کنید:', `یادداشت ${id}`);
+    if (res === null) return;
+    text = res || `یادداشت ${id}`;
+  }
+
+  const pin = document.createElement('div');
+  pin.className = 'annot-pin';
+  pin.innerHTML = `${id}<div class="annot-tooltip">${text}</div>`;
+  pin.style.pointerEvents = 'auto';
+  pin.addEventListener('contextmenu', async (e) => {
+    e.preventDefault();
+    const ok = await customConfirm(
+      'حذف حاشیه‌نویسی',
+      `آیا از حذف حاشیه‌نویسی «${text}» مطمئن هستید؟`,
+      { confirmText: 'حذف', icon: '🗑' }
+    );
+    if (ok) removeAnnotation(id);
+  });
+
+  annotationsOverlay.appendChild(pin);
+  annotations.push({ id, position, text, element: pin });
+
+  renderAnnotationsList();
+  showToast('حاشیه‌نویسی اضافه شد', 'success');
+}
+
+function removeAnnotation(id) {
+  const idx = annotations.findIndex(a => a.id === id);
+  if (idx === -1) return;
+  annotations[idx].element.remove();
+  annotations.splice(idx, 1);
+  renderAnnotationsList();
+  showToast('حاشیه‌نویسی حذف شد');
+}
+
+function clearAllAnnotations() {
+  annotations.forEach(a => a.element.remove());
+  annotations.length = 0;
+  renderAnnotationsList();
+}
+
+function renderAnnotationsList() {
+  const list = document.getElementById('annotations-list');
+  if (annotations.length === 0) {
+    list.innerHTML = '<div class="empty-list">هنوز حاشیه‌نویسی اضافه نشده</div>';
+    return;
+  }
+  list.innerHTML = '';
+  annotations.forEach(a => {
+    const item = document.createElement('div');
+    item.className = 'annotation-item';
+    item.innerHTML = `
+      <div class="num">${a.id}</div>
+      <div class="text">${a.text}</div>
+      <button class="del">✕</button>
+    `;
+    item.querySelector('.del').onclick = (e) => { e.stopPropagation(); removeAnnotation(a.id); };
+    item.onclick = () => {
+      controls.target.copy(a.position);
+      const dir = camera.position.clone().sub(controls.target).normalize();
+      camera.position.copy(a.position).add(dir.multiplyScalar(30));
+      controls.update();
+    };
+    list.appendChild(item);
+  });
+}
+
+function updateAnnotationPositions() {
+  if (!annotations.length) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  annotations.forEach(a => {
+    const v = a.position.clone().project(camera);
+    const x = (v.x * 0.5 + 0.5) * rect.width;
+    const y = (-v.y * 0.5 + 0.5) * rect.height;
+    if (v.z > 1) a.element.style.display = 'none';
+    else {
+      a.element.style.display = 'flex';
+      a.element.style.left = x + 'px';
+      a.element.style.top = y + 'px';
+    }
+  });
+}
+
+// ============================================================
+// UI Bindings
+// ============================================================
+document.getElementById('file-input').addEventListener('change', e => {
+  const files = Array.from(e.target.files || []);
+  if (files.length) loadFiles(files);
+  e.target.value = '';
+});
+const openPicker = () => document.getElementById('file-input').click();
+document.getElementById('btn-upload-header').onclick = openPicker;
+document.getElementById('btn-upload-side').onclick = openPicker;
+document.getElementById('drop-area').onclick = openPicker;
+
+// Drag & Drop
+const dropArea = document.getElementById('drop-area');
+['dragenter','dragover'].forEach(ev => {
+  dropArea.addEventListener(ev, e => { e.preventDefault(); dropArea.classList.add('drag'); });
+});
+['dragleave','drop'].forEach(ev => {
+  dropArea.addEventListener(ev, e => { e.preventDefault(); dropArea.classList.remove('drag'); });
+});
+function onDrop(e) {
+  e.preventDefault();
+  const files = Array.from(e.dataTransfer.files || []);
+  if (files.length) loadFiles(files);
+}
+dropArea.addEventListener('drop', onDrop);
+viewport.addEventListener('dragover', e => e.preventDefault());
+viewport.addEventListener('drop', onDrop);
+
+// Color swatches
+document.querySelectorAll('#color-swatches .swatch').forEach(sw => {
+  sw.onclick = () => {
+    document.querySelectorAll('#color-swatches .swatch').forEach(s => s.classList.remove('active'));
+    sw.classList.add('active');
+    const color = sw.dataset.color;
+    setColor(color);
+    document.getElementById('color-custom').value = color;
+  };
+});
+
+function setColor(hex) {
+  materialState.color = new THREE.Color(hex).getHex();
+  if (!currentObject) return;
+  currentObject.traverse(c => {
+    if (c.isMesh && c.material) {
+      const mats = Array.isArray(c.material) ? c.material : [c.material];
+      mats.forEach(m => {
+        if (m.color && !m.map) {
+          m.color.setHex(materialState.color);
+          m.needsUpdate = true;
+        }
+      });
+    }
+  });
+}
+
+document.getElementById('color-custom').addEventListener('input', e => {
+  setColor(e.target.value);
+  document.querySelectorAll('#color-swatches .swatch').forEach(s => s.classList.remove('active'));
+});
+
+// Sliders
+function bindSlider(id, valId, onChange, fmt = v => v.toFixed(2)) {
+  const el = document.getElementById(id);
+  const vEl = document.getElementById(valId);
+  if (!el) return;
+  el.addEventListener('input', () => {
+    const v = parseFloat(el.value);
+    vEl.textContent = fmt(v);
+    onChange(v);
+  });
+  vEl.textContent = fmt(parseFloat(el.value));
+}
+
+function updateAllMaterials(prop, value) {
+  if (!currentObject) return;
+  currentObject.traverse(c => {
+    if (c.isMesh && c.material) {
+      const mats = Array.isArray(c.material) ? c.material : [c.material];
+      mats.forEach(m => {
+        if (prop in m) { m[prop] = value; m.needsUpdate = true; }
+      });
+    }
+  });
+}
+
+bindSlider('s-metalness', 'v-metalness', v => { materialState.metalness = v; updateAllMaterials('metalness', v); });
+bindSlider('s-roughness', 'v-roughness', v => { materialState.roughness = v; updateAllMaterials('roughness', v); });
+bindSlider('s-opacity', 'v-opacity', v => {
+  materialState.opacity = v;
+  if (!currentObject) return;
+  currentObject.traverse(c => {
+    if (c.isMesh && c.material) {
+      const mats = Array.isArray(c.material) ? c.material : [c.material];
+      mats.forEach(m => {
+        m.opacity = v; m.transparent = v < 1; m.needsUpdate = true;
+      });
+    }
+  });
+});
+bindSlider('s-envintensity', 'v-envintensity', v => {
+  materialState.envMapIntensity = v;
+  updateAllMaterials('envMapIntensity', v);
+});
+bindSlider('s-ambient', 'v-ambient', v => ambient.intensity = v);
+bindSlider('s-key', 'v-key', v => keyLight.intensity = v);
+bindSlider('s-fill', 'v-fill', v => fillLight.intensity = v);
+bindSlider('s-rim', 'v-rim', v => rimLight.intensity = v);
+bindSlider('s-rotspeed', 'v-rotspeed', v => controls.autoRotateSpeed = v, v => v.toFixed(1));
+bindSlider('s-fov', 'v-fov', v => { camera.fov = v; camera.updateProjectionMatrix(); }, v => v.toFixed(0));
+bindSlider('s-damping', 'v-damping', v => controls.dampingFactor = v);
+bindSlider('s-bloomint', 'v-bloomint', v => bloomPass.strength = v);
+
+document.getElementById('sel-materialtype').addEventListener('change', e => {
+  currentMaterialType = e.target.value;
+  rebuildMaterial();
+  showToast('متریال: ' + e.target.options[e.target.selectedIndex].text);
+});
+
+document.getElementById('sel-displaymode').addEventListener('change', () => {
+  rebuildMaterial();
+});
+
+// Switches
+const switchBindings = {
+  'sw-doubleside': v => {
+    materialState.doubleSide = v;
+    updateAllMaterials('side', v ? THREE.DoubleSide : THREE.FrontSide);
+  },
+  'sw-showenv': v => {
+    if (v) scene.background = getEnvironmentTexture(currentEnv);
+    else scene.background = new THREE.Color(document.getElementById('color-bg').value);
+  },
+  'sw-grid': v => { if (grid) grid.visible = v; },
+  'sw-axes': v => { if (axes) axes.visible = v; },
+  'sw-shadows': v => {
+    renderer.shadowMap.enabled = v;
+    if (ground) ground.visible = v;
+    if (currentObject) {
+      currentObject.traverse(c => {
+        if (c.isMesh) { c.castShadow = v; c.receiveShadow = v; }
+      });
+    }
+  },
+  'sw-autorotate': v => {
+    controls.autoRotate = v;
+    document.getElementById('vb-autorotate').classList.toggle('active', v);
+  },
+  'sw-bloom': v => { bloomPass.enabled = v; },
+};
+
+Object.keys(switchBindings).forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('change', () => switchBindings[id](el.checked));
+  if (el.checked) switchBindings[id](true);
+});
+
+document.getElementById('color-bg').addEventListener('input', e => {
+  if (!document.getElementById('sw-showenv').checked) {
+    scene.background = new THREE.Color(e.target.value);
+  }
+});
+
+document.querySelectorAll('.env-item').forEach(item => {
+  item.onclick = () => {
+    document.querySelectorAll('.env-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    applyEnvironment(item.dataset.env);
+  };
+});
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`[data-panel="${tab.dataset.tab}"]`).classList.add('active');
+  };
+});
+
+document.getElementById('vb-fit').onclick = () => currentObject && fitCameraToObject(currentObject);
+document.getElementById('vb-reset').onclick = resetCamera;
+document.getElementById('vb-autorotate').onclick = () => {
+  const sw = document.getElementById('sw-autorotate');
+  sw.checked = !sw.checked;
+  switchBindings['sw-autorotate'](sw.checked);
+};
+document.getElementById('vb-fullscreen').onclick = () => {
+  if (!document.fullscreenElement) viewport.requestFullscreen();
+  else document.exitFullscreen();
+};
+document.getElementById('vb-screenshot').onclick = () => takeScreenshot();
+document.getElementById('vb-annotate').onclick = toggleAnnotateMode;
+document.getElementById('vb-sidebar-right').onclick = () => {
+  document.getElementById('sidebar-right').classList.toggle('collapsed');
+  setTimeout(onResize, 320);
+};
+
+renderer.domElement.addEventListener('click', handleViewportClick);
+
+document.getElementById('btn-add-annot').onclick = () => {
+  if (!currentObject) { showToast('ابتدا یک مدل بارگذاری کنید', 'error'); return; }
+  if (!annotateMode) toggleAnnotateMode();
+};
+document.getElementById('btn-clear-annots').onclick = async () => {
+  if (annotations.length) {
+    const ok = await customConfirm('پاک کردن همه حاشیه‌نویسی‌ها', 'آیا مطمئن هستید؟', { confirmText: 'پاک کن', icon: '🗑' });
+    if (ok) clearAllAnnotations();
+  }
+};
+
+// Extract buttons
+document.getElementById('btn-extract-all').onclick = extractAllTextures;
+document.getElementById('btn-extract-report').onclick = extractTextureReport;
+
+// ============================================================
+// Global Texture UI
+// ============================================================
+const texDrop = document.getElementById('texture-drop');
+const texInput = document.getElementById('texture-input');
+
+document.getElementById('btn-tex-pick').onclick = (e) => { e.stopPropagation(); texInput.click(); };
+texDrop.onclick = () => texInput.click();
+
+texInput.addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (f) applyGlobalTexture(f);
+  e.target.value = '';
+});
+
+['dragenter','dragover'].forEach(ev => {
+  texDrop.addEventListener(ev, e => { e.preventDefault(); texDrop.classList.add('drag'); });
+});
+['dragleave','drop'].forEach(ev => {
+  texDrop.addEventListener(ev, e => { e.preventDefault(); texDrop.classList.remove('drag'); });
+});
+texDrop.addEventListener('drop', e => {
+  e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  if (f) applyGlobalTexture(f);
+});
+
+document.getElementById('btn-tex-clear').onclick = (e) => {
+  e.stopPropagation();
+  removeAllTexturesOfCurrentSlot();
+};
+
+document.getElementById('sel-textype').addEventListener('change', e => {
+  globalTexState.type = e.target.value;
+});
+
+async function applyGlobalTexture(file) {
+  if (!currentObject) { showToast('ابتدا یک مدل بارگذاری کنید', 'error'); return; }
+  if (!file.type.startsWith('image/')) { showToast('فایل تصویری نیست', 'error'); return; }
+
+  showLoading(true, 'در حال اعمال تکسچر...');
+  try {
+    const dataURL = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+
+    const tex = await new Promise((res, rej) => {
+      new THREE.TextureLoader().load(dataURL, res, undefined, rej);
+    });
+
+    const slot = globalTexState.type;
+    const isColor = ['map','emissiveMap'].includes(slot);
+    tex.colorSpace = isColor ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    tex.repeat.set(globalTexState.repeat.x, globalTexState.repeat.y);
+    tex.needsUpdate = true;
+
+    if (globalTexState.autoUV) {
+      currentObject.traverse(c => {
+        if (c.isMesh && c.geometry) generateAutoUVs(c.geometry);
+      });
+    }
+
+    currentObject.traverse(c => {
+      if (c.isMesh && c.material) {
+        const mats = Array.isArray(c.material) ? c.material : [c.material];
+        mats.forEach(m => {
+          m[slot] = tex;
+          if (slot === 'emissiveMap' && (!m.emissive || m.emissive.getHex() === 0)) {
+            m.emissive = new THREE.Color(0xffffff);
+          }
+          m.needsUpdate = true;
+        });
+      }
+    });
+
+    document.getElementById('tex-preview').innerHTML = `<img src="${dataURL}" alt="texture">`;
+    document.getElementById('tex-name').textContent = file.name;
+
+    scanModelTextures();
+    showToast('تکسچر اعمال شد', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('خطا در اعمال تکسچر', 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+function removeAllTexturesOfCurrentSlot() {
+  if (!currentObject) { showToast('مدلی بارگذاری نشده', 'error'); return; }
+  const slot = globalTexState.type;
+  currentObject.traverse(c => {
+    if (c.isMesh && c.material) {
+      const mats = Array.isArray(c.material) ? c.material : [c.material];
+      mats.forEach(m => {
+        if (m[slot]) { m[slot] = null; m.needsUpdate = true; }
+      });
+    }
+  });
+  scanModelTextures();
+  document.getElementById('tex-preview').innerHTML = '<span class="tex-placeholder">🖼️</span>';
+  document.getElementById('tex-name').textContent = 'تصویری انتخاب نشده';
+  showToast('تکسچرهای این اسلات حذف شدند', 'warning');
+}
+
+document.getElementById('sw-autouv').addEventListener('change', e => {
+  globalTexState.autoUV = e.target.checked;
+});
+
+bindSlider('s-texrepeatx','v-texrepeatx', v => {
+  globalTexState.repeat.x = v;
+  if (currentObject) {
+    currentObject.traverse(c => {
+      if (c.isMesh && c.material) {
+        const mats = Array.isArray(c.material) ? c.material : [c.material];
+        mats.forEach(m => {
+          const t = m[globalTexState.type];
+          if (t) { t.repeat.x = v; t.needsUpdate = true; }
+        });
+      }
+    });
+  }
+}, v => v.toFixed(1));
+
+bindSlider('s-texrepeaty','v-texrepeaty', v => {
+  globalTexState.repeat.y = v;
+  if (currentObject) {
+    currentObject.traverse(c => {
+      if (c.isMesh && c.material) {
+        const mats = Array.isArray(c.material) ? c.material : [c.material];
+        mats.forEach(m => {
+          const t = m[globalTexState.type];
+          if (t) { t.repeat.y = v; t.needsUpdate = true; }
+        });
+      }
+    });
+  }
+}, v => v.toFixed(1));
+
+// ============================================================
+// Export
+// ============================================================
+function downloadBlob(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 100);
+}
+
+function firstMesh(obj) {
+  let m = null;
+  obj.traverse(c => { if (!m && c.isMesh) m = c; });
+  return m;
+}
+
+document.getElementById('ex-obj').onclick = () => {
+  if (!currentObject) return showToast('مدلی بارگذاری نشده', 'error');
+  const exporter = new OBJExporter();
+  const result = exporter.parse(currentObject);
+  downloadBlob(new Blob([result], { type: 'text/plain' }),
+    (currentFileName.replace(/\.[^.]+$/, '') || 'model') + '.obj');
+  showToast('OBJ صادر شد', 'success');
+};
+
+document.getElementById('ex-stl').onclick = () => {
+  if (!currentObject) return showToast('مدلی بارگذاری نشده', 'error');
+  const mesh = firstMesh(currentObject);
+  if (!mesh) return showToast('مش یافت نشد', 'error');
+  const exporter = new STLExporter();
+  const result = exporter.parse(mesh, { binary: true });
+  downloadBlob(new Blob([result], { type: 'application/octet-stream' }),
+    (currentFileName.replace(/\.[^.]+$/, '') || 'model') + '.stl');
+  showToast('STL صادر شد', 'success');
+};
+
+document.getElementById('ex-gltf').onclick = () => {
+  if (!currentObject) return showToast('مدلی بارگذاری نشده', 'error');
+  showLoading(true, 'در حال آماده‌سازی GLB...');
+  const exporter = new GLTFExporter();
+  exporter.parse(currentObject, (result) => {
+    const blob = result instanceof ArrayBuffer
+      ? new Blob([result], { type: 'model/gltf-binary' })
+      : new Blob([JSON.stringify(result)], { type: 'model/gltf+json' });
+    const ext = result instanceof ArrayBuffer ? '.glb' : '.gltf';
+    downloadBlob(blob, (currentFileName.replace(/\.[^.]+$/, '') || 'model') + ext);
+    showToast('GLB صادر شد (با تکسچرها)', 'success');
+    showLoading(false);
+  }, (err) => {
+    console.error(err);
+    showToast('خطا در صادرات glTF', 'error');
+    showLoading(false);
+  }, { binary: true, embedImages: true });
+};
+
+document.getElementById('ex-json').onclick = () => {
+  if (!currentObject) return showToast('مدلی بارگذاری نشده', 'error');
+  const data = { name: currentFileName, meshes: [] };
+  currentObject.traverse(c => {
+    if (c.isMesh && c.geometry) {
+      const pos = c.geometry.attributes.position;
+      data.meshes.push({
+        name: c.name || 'mesh',
+        vertexCount: pos.count,
+        positions: Array.from(pos.array),
+        index: c.geometry.index ? Array.from(c.geometry.index.array) : null,
+      });
+    }
+  });
+  downloadBlob(new Blob([JSON.stringify(data)], { type: 'application/json' }),
+    (currentFileName.replace(/\.[^.]+$/, '') || 'model') + '.json');
+  showToast('JSON صادر شد', 'success');
+};
+
+function takeScreenshot(scale = 1) {
+  if (!currentObject) return showToast('مدلی بارگذاری نشده', 'error');
+  const w = renderer.domElement.width;
+  const h = renderer.domElement.height;
+  if (scale !== 1) renderer.setSize(w * scale, h * scale, false);
+  renderer.render(scene, camera);
+  const url = renderer.domElement.toDataURL('image/png');
+  if (scale !== 1) { renderer.setSize(w, h, false); onResize(); }
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (currentFileName.replace(/\.[^.]+$/, '') || 'screenshot') + '.png';
+  a.click();
+  showToast('اسکرین‌شات ذخیره شد', 'success');
+}
+
+document.getElementById('ex-screenshot').onclick = () => takeScreenshot();
+document.getElementById('ex-screenshot-hi').onclick = () => takeScreenshot(2);
+
+document.getElementById('ex-clear').onclick = async () => {
+  if (currentObject) {
+    const ok = await customConfirm('حذف مدل', 'آیا از حذف مدل فعلی مطمئن هستید؟', { confirmText: 'حذف', icon: '🗑' });
+    if (ok) {
+      clearModel();
+      showToast('مدل حذف شد', 'warning');
+    }
+  }
+};
+
+document.getElementById('ex-embed').onclick = () => {
+  const code = `<iframe src="${location.href}" width="640" height="480" frameborder="0" allowfullscreen></iframe>`;
+  navigator.clipboard.writeText(code);
+  showToast('کد Embed کپی شد', 'success');
+};
+document.getElementById('ex-link').onclick = () => {
+  navigator.clipboard.writeText(location.href);
+  showToast('لینک کپی شد', 'success');
+};
+document.getElementById('btn-share').onclick = () => {
+  navigator.clipboard.writeText(location.href);
+  showToast('لینک کپی شد', 'success');
+};
+
+// Keyboard
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+  if (document.getElementById('modal-backdrop').classList.contains('active')) return;
+  switch (e.key.toLowerCase()) {
+    case 'f': if (currentObject) fitCameraToObject(currentObject); break;
+    case 'r': resetCamera(); break;
+    case 'a': toggleAnnotateMode(); break;
+    case 'escape': if (annotateMode) toggleAnnotateMode(); break;
+  }
+});
+
+// ============================================================
+// Loading / Resize / Animation
+// ============================================================
+function showLoading(show, msg = 'در حال بارگذاری...') {
+  document.getElementById('loading-msg').textContent = msg;
+  document.getElementById('loading').classList.toggle('active', show);
+}
+
+function onResize() {
+  const w = viewport.clientWidth;
+  const h = viewport.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  composer.setSize(w, h);
+}
+window.addEventListener('resize', onResize);
+
+let lastTime = performance.now();
+let frames = 0;
+const fpsEl = document.getElementById('fps');
+const statusEl = document.getElementById('status-info');
+
+function animate(now) {
+  requestAnimationFrame(animate);
+  controls.update();
+  updateAnnotationPositions();
+
+  if (bloomPass.enabled) composer.render();
+  else renderer.render(scene, camera);
+
+  frames++;
+  if (now - lastTime >= 1000) {
+    fpsEl.textContent = frames;
+    frames = 0;
+    lastTime = now;
+    statusEl.textContent = currentObject ? 'فعال' : 'آماده';
+  }
+}
+animate();
+</script>
+</body>
+</html>
